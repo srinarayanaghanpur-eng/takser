@@ -1,0 +1,84 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------------------- HELPERS ----------------------
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function getRole() {
+      return isAuthenticated()
+        ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role
+        : null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && getRole() == 'admin';
+    }
+
+    function isTeacher() {
+      return isAuthenticated() && getRole() == 'teacher';
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAssignedToTask(taskData) {
+      return isAuthenticated() && taskData.assignedTo.hasAny([request.auth.uid]);
+    }
+
+    // ---------------------- USERS ----------------------
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isAdmin();
+      allow update: if isAdmin() || isOwner(userId);
+      allow delete: if isAdmin();
+    }
+
+    // ---------------------- TASKS ----------------------
+    match /tasks/{taskId} {
+      allow read: if isAdmin() || isAssignedToTask(resource.data);
+      allow create: if isAdmin();
+      allow update: if isAdmin() || (isTeacher() && isAssignedToTask(resource.data) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'completionNote', 'acceptedAt', 'completedAt', 'proofImageUrl', 'proofDocUrl']));
+      allow delete: if isAdmin();
+
+      // Subcollections inherit parent rules — override for comments
+      match /comments/{commentId} {
+        allow read: if isAuthenticated();
+        allow create: if isAuthenticated();
+        allow update: if isOwner(resource.data.userId);
+        allow delete: if isAdmin();
+      }
+    }
+
+    // Legacy comments collection (top-level)
+    match /taskComments/{commentId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isOwner(resource.data.userId);
+      allow delete: if isAdmin();
+    }
+
+    // ---------------------- NOTIFICATIONS ----------------------
+    match /notifications/{notifId} {
+      allow read: if isAuthenticated() && request.auth.uid == resource.data.uid;
+      allow create: if isAdmin();
+      allow update: if isOwner(resource.data.uid);
+      allow delete: if isAdmin();
+    }
+
+    // ---------------------- ANALYTICS ----------------------
+    match /analytics/{docId} {
+      allow read: if isAdmin();
+      allow write: if isAdmin();
+    }
+
+    // ---------------------- DEFAULT DENY ----------------------
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

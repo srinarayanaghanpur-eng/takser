@@ -1,0 +1,73 @@
+{
+  "expo": {
+    "name": "Sri Narayana Teacher Tasks",
+    "slug": "sri-narayana-teacher-tasks",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "scheme": "sri-narayana-tasks",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#1A3A6B"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.srinarayana.teachertasks",
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSFaceIDUsageDescription": "Confirm your identity with Face ID when accepting or completing tasks.",
+        "NSPhotoLibraryUsageDescription": "Attach proof photos when completing tasks.",
+        "NSCameraUsageDescription": "Take proof photos when completing tasks."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#1A3A6B",
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "package": "com.srinarayana.teachertasks",
+      "versionCode": 1,
+      "permissions": ["USE_BIOMETRIC", "USE_FINGERPRINT", "VIBRATE"],
+      "edgeToEdgeEnabled": true
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "name": "Sri Narayana Teacher Tasks"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#1A3A6B",
+          "sounds": ["./assets/sounds/siren.wav"],
+          "androidMode": "default",
+          "androidCollapsedTitle": "New task assigned"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Attach proof photos when completing tasks."
+        }
+      ]
+    ],
+    "updates": {
+      "enabled": true,
+      "fallbackToCacheTimeout": 0
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "8defcbcc-a622-4839-8ce3-c2c394751267"
+      }
+    }
+  }
+}
