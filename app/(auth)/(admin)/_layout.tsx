@@ -41,7 +41,7 @@ export default function AdminTabLayout() {
         options={{
           title: "Dashboard",
           tabBarIcon: ({ color, size }) => (
-            <Text style={{ fontSize: size - 4 }}>{"\uD83D\uDCCA"}</Text>
+            <Text style={{ fontSize: size - 4 }}>{"📊"}</Text>
           ),
         }}
       />
@@ -50,7 +50,7 @@ export default function AdminTabLayout() {
         options={{
           title: "Teachers",
           tabBarIcon: ({ color, size }) => (
-            <Text style={{ fontSize: size - 4 }}>{"\uD83D\uDC65"}</Text>
+            <Text style={{ fontSize: size - 4 }}>{"👥"}</Text>
           ),
         }}
       />
@@ -59,7 +59,7 @@ export default function AdminTabLayout() {
         options={{
           title: "Alerts",
           tabBarIcon: ({ color, size }) => (
-            <Text style={{ fontSize: size - 4 }}>{"\uD83D\uDD14"}</Text>
+            <Text style={{ fontSize: size - 4 }}>{"🔔"}</Text>
           ),
         }}
       />
@@ -68,7 +68,7 @@ export default function AdminTabLayout() {
         options={{
           title: "Profile",
           tabBarIcon: ({ color, size }) => (
-            <Text style={{ fontSize: size - 4 }}>{"\uD83D\uDC64"}</Text>
+            <Text style={{ fontSize: size - 4 }}>{"👤"}</Text>
           ),
         }}
       />
@@ -77,7 +77,7 @@ export default function AdminTabLayout() {
         options={{
           title: "New Task",
           tabBarIcon: ({ color, size }) => (
-            <Text style={{ fontSize: size - 4 }}>{"\u2795"}</Text>
+            <Text style={{ fontSize: size - 4 }}>{"➕"}</Text>
           ),
         }}
       />

@@ -14,13 +14,13 @@ interface TaskCardProps {
 }
 
 const categoryEmoji: Record<string, string> = {
-  academic: "\uD83D\uDCDA",
-  homework: "\u270F\uFE0F",
-  exam: "\uD83D\uDCCB",
-  meeting: "\uD83D\uDC65",
-  documentation: "\uD83D\uDCC4",
-  student_related: "\uD83D\uDC64",
-  other: "\uD83D\uDCCB",
+  academic: "📚",
+  homework: "✏️",
+  exam: "📋",
+  meeting: "👥",
+  documentation: "📄",
+  student_related: "👤",
+  other: "📋",
 };
 
 export function TaskCard({ task, compact, index = 0 }: TaskCardProps) {
@@ -52,7 +52,7 @@ export function TaskCard({ task, compact, index = 0 }: TaskCardProps) {
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }}>
           <View style={{ flex: 1, marginRight: 12 }}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 6 }}>
-              <Text style={{ fontSize: 16 }}>{categoryEmoji[task.category] ?? "\uD83D\uDCCB"}</Text>
+              <Text style={{ fontSize: 16 }}>{categoryEmoji[task.category] ?? "📋"}</Text>
               <PriorityBadge priority={task.priority} size={compact ? "sm" : "md"} />
               {isOverdue && (
                 <View style={{ backgroundColor: "#FEE2E2", paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
@@ -98,7 +98,7 @@ export function TaskCard({ task, compact, index = 0 }: TaskCardProps) {
 
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: compact ? 6 : 10, paddingTop: compact ? 6 : 10, borderTopWidth: 1, borderTopColor: "#F1F5F9" }}>
           <Text style={{ fontSize: 12, fontWeight: "600", color: "#94A3B8" }}>
-            {"\uD83D\uDCC5"} {format(deadlineDate, "MMM d, h:mm a")}
+            {"📅"} {format(deadlineDate, "MMM d, h:mm a")}
           </Text>
           <Text style={{ fontSize: 12, fontWeight: "600", color: "#94A3B8" }}>
             {task.assignedByName ?? "System"}

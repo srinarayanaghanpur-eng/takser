@@ -41,7 +41,7 @@ export default function TeacherTabLayout() {
         options={{
           title: "Home",
           tabBarIcon: ({ color, size }) => (
-            <Text style={{ fontSize: size - 4 }}>{"\uD83C\uDFE0"}</Text>
+            <Text style={{ fontSize: size - 4 }}>{"🏠"}</Text>
           ),
         }}
       />
@@ -50,7 +50,7 @@ export default function TeacherTabLayout() {
         options={{
           title: "Alerts",
           tabBarIcon: ({ color, size }) => (
-            <Text style={{ fontSize: size - 4 }}>{"\uD83D\uDD14"}</Text>
+            <Text style={{ fontSize: size - 4 }}>{"🔔"}</Text>
           ),
         }}
       />
@@ -59,7 +59,7 @@ export default function TeacherTabLayout() {
         options={{
           title: "Profile",
           tabBarIcon: ({ color, size }) => (
-            <Text style={{ fontSize: size - 4 }}>{"\uD83D\uDC64"}</Text>
+            <Text style={{ fontSize: size - 4 }}>{"👤"}</Text>
           ),
         }}
       />

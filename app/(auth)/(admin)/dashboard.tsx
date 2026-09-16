@@ -102,10 +102,10 @@ export default function AdminDashboard() {
       <Animated.View entering={FadeInUp.duration(500).delay(150)} style={{ paddingHorizontal: 16, marginBottom: 8 }}>
         <Text style={{ fontSize: 18, fontWeight: "700", color: "#0F172A", marginBottom: 12 }}>Overview</Text>
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
-          <StatCard label="Completion Rate" value={`${completionRate}%`} color="#22C55E" bg="#DCFCE7" icon="\uD83C\uDFAF" />
-          <StatCard label="Urgent Tasks" value={urgent} color="#EF4444" bg="#FEE2E2" icon="\u26A0\uFE0F" />
-          <StatCard label="Delayed" value={delayed} color="#F97316" bg="#FFEDD5" icon="\u23F0" />
-          <StatCard label="Total Tasks" value={total} color="#1A3A6B" bg="#EFF6FF" icon="\uD83D\uDCCA" />
+          <StatCard label="Completion Rate" value={`${completionRate}%`} color="#22C55E" bg="#DCFCE7" icon="🎯" />
+          <StatCard label="Urgent Tasks" value={urgent} color="#EF4444" bg="#FEE2E2" icon="⚠️" />
+          <StatCard label="Delayed" value={delayed} color="#F97316" bg="#FFEDD5" icon="⏰" />
+          <StatCard label="Total Tasks" value={total} color="#1A3A6B" bg="#EFF6FF" icon="📊" />
         </View>
       </Animated.View>
 
@@ -113,7 +113,7 @@ export default function AdminDashboard() {
       <Animated.View entering={FadeInUp.duration(500).delay(200)} style={{ paddingHorizontal: 16, marginBottom: 8 }}>
         <Text style={{ fontSize: 18, fontWeight: "700", color: "#0F172A", marginBottom: 12 }}>Teacher Performance</Text>
         {topTeachers.length === 0 ? (
-          <EmptyState title="No data yet" description="Tasks will appear here once assigned" icon="\uD83D\uDCCA" />
+          <EmptyState title="No data yet" description="Tasks will appear here once assigned" icon="📊" />
         ) : (
           topTeachers.map((teacher, i) => (
             <GlassCard key={teacher.id} style={{ padding: 14, marginBottom: 8 }}>

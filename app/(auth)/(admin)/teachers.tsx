@@ -86,7 +86,7 @@ export default function AdminTeachers() {
           <EmptyState
             title={search ? "No teachers found" : "No teachers registered"}
             description={search ? "Try a different search term" : "Add teachers from the admin panel"}
-            icon="\uD83D\uDC65"
+            icon="👥"
           />
         ) : (
           filtered.map((teacher) => (
@@ -100,7 +100,7 @@ export default function AdminTeachers() {
                 <View style={{ flex: 1 }}>
                   <Text style={{ fontSize: 16, fontWeight: "700", color: "#0F172A" }}>{teacher.name}</Text>
                   <Text style={{ fontSize: 13, color: "#64748B", marginTop: 2 }}>
-                    {teacher.employeeId} {teacher.department ? `\u00B7 ${teacher.department}` : ""}
+                    {teacher.employeeId} {teacher.department ? `· ${teacher.department}` : ""}
                   </Text>
                 </View>
               </View>

@@ -70,7 +70,7 @@ export default function LoginScreen() {
               borderColor: "rgba(255,255,255,0.2)",
             }}
           >
-            <Text style={{ fontSize: 36 }}>{"\uD83C\uDF93"}</Text>
+            <Text style={{ fontSize: 36 }}>{"🎓"}</Text>
           </View>
           <Text style={{ fontSize: 24, fontWeight: "800", color: "#FFFFFF", marginBottom: 4 }}>
             Welcome Back

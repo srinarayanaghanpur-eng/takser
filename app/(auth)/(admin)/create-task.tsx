@@ -15,13 +15,13 @@ import { PRIORITY_CONFIG } from "../../../src/constants/config";
 import type { AppUser, TaskCategory, TaskPriority, TaskAssignment } from "../../../src/types";
 
 const CATEGORIES: { key: TaskCategory; label: string; emoji: string }[] = [
-  { key: "academic", label: "Academic", emoji: "\uD83D\uDCDA" },
-  { key: "homework", label: "Homework", emoji: "\u270F\uFE0F" },
-  { key: "exam", label: "Exam", emoji: "\uD83D\uDCCB" },
-  { key: "meeting", label: "Meeting", emoji: "\uD83D\uDC65" },
-  { key: "documentation", label: "Documentation", emoji: "\uD83D\uDCC4" },
-  { key: "student_related", label: "Student", emoji: "\uD83D\uDC64" },
-  { key: "other", label: "Other", emoji: "\uD83D\uDCCB" },
+  { key: "academic", label: "Academic", emoji: "📚" },
+  { key: "homework", label: "Homework", emoji: "✏️" },
+  { key: "exam", label: "Exam", emoji: "📋" },
+  { key: "meeting", label: "Meeting", emoji: "👥" },
+  { key: "documentation", label: "Documentation", emoji: "📄" },
+  { key: "student_related", label: "Student", emoji: "👤" },
+  { key: "other", label: "Other", emoji: "📋" },
 ];
 
 const PRIORITIES: { key: TaskPriority; label: string; color: string }[] = [

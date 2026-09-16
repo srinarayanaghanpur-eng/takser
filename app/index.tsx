@@ -61,7 +61,7 @@ export default function SplashScreen() {
             borderColor: "rgba(255,255,255,0.2)",
           }}
         >
-          <Text style={{ fontSize: 48 }}>{"\uD83C\uDF93"}</Text>
+          <Text style={{ fontSize: 48 }}>{"🎓"}</Text>
         </View>
         <Text style={{ fontSize: 28, fontWeight: "800", color: "#FFFFFF", letterSpacing: -0.5 }}>
           Sri Narayana

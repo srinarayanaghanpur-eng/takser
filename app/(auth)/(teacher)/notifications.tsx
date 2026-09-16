@@ -12,10 +12,10 @@ import { colors } from "../../../src/constants/theme";
 import type { AppNotification } from "../../../src/types";
 
 const typeEmojis: Record<string, string> = {
-  new_task: "\uD83D\uDCE5",
-  deadline_approaching: "\u23F0",
-  task_updated: "\uD83D\uDD04",
-  reminder: "\uD83D\uDD14",
+  new_task: "📥",
+  deadline_approaching: "⏰",
+  task_updated: "🔄",
+  reminder: "🔔",
 };
 
 export default function TeacherNotifications() {
@@ -93,7 +93,7 @@ export default function TeacherNotifications() {
             <TouchableOpacity onPress={() => handlePress(notif)} activeOpacity={0.7}>
               <GlassCard style={{ padding: 14, marginBottom: 8, opacity: notif.read ? 0.7 : 1 }}>
                 <View style={{ flexDirection: "row", gap: 12 }}>
-                  <Text style={{ fontSize: 24 }}>{typeEmojis[notif.type] ?? "\uD83D\uDCE2"}</Text>
+                  <Text style={{ fontSize: 24 }}>{typeEmojis[notif.type] ?? "📢"}</Text>
                   <View style={{ flex: 1 }}>
                     <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }}>
                       <Text style={{ fontSize: 15, fontWeight: notif.read ? "600" : "800", color: "#0F172A", flex: 1, marginRight: 8 }}>

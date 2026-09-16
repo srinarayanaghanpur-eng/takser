@@ -88,10 +88,10 @@ export default function TeacherDashboard() {
           Overview
         </Text>
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
-          <StatCard label="Total Tasks" value={tasks.length} color="#1A3A6B" bg="#EFF6FF" icon="\uD83D\uDCCA" />
-          <StatCard label="Completed" value={completed.length} color="#22C55E" bg="#DCFCE7" icon="\u2705" />
-          <StatCard label="Pending" value={pending.length} color="#F59E0B" bg="#FEF3C7" icon="\u23F3" />
-          <StatCard label="Urgent" value={urgent.length} color="#EF4444" bg="#FEE2E2" icon="\u26A0\uFE0F" />
+          <StatCard label="Total Tasks" value={tasks.length} color="#1A3A6B" bg="#EFF6FF" icon="📊" />
+          <StatCard label="Completed" value={completed.length} color="#22C55E" bg="#DCFCE7" icon="✅" />
+          <StatCard label="Pending" value={pending.length} color="#F59E0B" bg="#FEF3C7" icon="⏳" />
+          <StatCard label="Urgent" value={urgent.length} color="#EF4444" bg="#FEE2E2" icon="⚠️" />
         </View>
       </Animated.View>
 
@@ -107,7 +107,7 @@ export default function TeacherDashboard() {
         </View>
         {todayTasks.length === 0 ? (
           <GlassCard style={{ padding: 24, alignItems: "center" }}>
-            <Text style={{ fontSize: 32, marginBottom: 8 }}>{"\u2705"}</Text>
+            <Text style={{ fontSize: 32, marginBottom: 8 }}>{"✅"}</Text>
             <Text style={{ fontSize: 15, fontWeight: "600", color: "#64748B" }}>No tasks for today!</Text>
           </GlassCard>
         ) : (

@@ -6,7 +6,7 @@ interface EmptyStateProps {
   description?: string;
 }
 
-export function EmptyState({ icon = "\uD83D\uDCED", title, description }: EmptyStateProps) {
+export function EmptyState({ icon = "📭", title, description }: EmptyStateProps) {
   return (
     <View style={{ alignItems: "center", justifyContent: "center", paddingVertical: 60, paddingHorizontal: 32 }}>
       <Text style={{ fontSize: 48, marginBottom: 16 }}>{icon}</Text>
