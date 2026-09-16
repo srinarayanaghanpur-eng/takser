@@ -46,15 +46,6 @@ export default function AdminTabLayout() {
         }}
       />
       <Tabs.Screen
-        name="teachers"
-        options={{
-          title: "Teachers",
-          tabBarIcon: ({ color, size }) => (
-            <Text style={{ fontSize: size - 4 }}>{"👥"}</Text>
-          ),
-        }}
-      />
-      <Tabs.Screen
         name="notifications"
         options={{
           title: "Alerts",
@@ -64,20 +55,20 @@ export default function AdminTabLayout() {
         }}
       />
       <Tabs.Screen
-        name="profile"
-        options={{
-          title: "Profile",
-          tabBarIcon: ({ color, size }) => (
-            <Text style={{ fontSize: size - 4 }}>{"👤"}</Text>
-          ),
-        }}
-      />
-      <Tabs.Screen
         name="create-task"
         options={{
           title: "New Task",
           tabBarIcon: ({ color, size }) => (
             <Text style={{ fontSize: size - 4 }}>{"➕"}</Text>
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="settings"
+        options={{
+          title: "Settings",
+          tabBarIcon: ({ color, size }) => (
+            <Text style={{ fontSize: size - 4 }}>{"⚙️"}</Text>
           ),
         }}
       />
