@@ -1,20 +1,45 @@
-import * as Notifications from "expo-notifications";
 import * as Device from "expo-device";
 import { Platform } from "react-native";
 
 export const SIREN_CHANNEL_ID = "task-siren";
 export const SIREN_SOUND = "siren.wav";
 
+type NotificationsModule = typeof import("expo-notifications");
+
+let cached: NotificationsModule | null | undefined;
+
+function getNotifications(): NotificationsModule | null {
+  if (cached !== undefined) return cached;
+  try {
+    cached = require("expo-notifications") as NotificationsModule;
+  } catch {
+    // Expo Go (SDK 53+) removed remote push: run without notifications.
+    cached = null;
+  }
+  return cached;
+}
+
+function isPushSupported(): boolean {
+  if (Platform.OS === "web") return false;
+  try {
+    if (!Device.isDevice) return false;
+  } catch {
+    return false;
+  }
+  return getNotifications() !== null;
+}
+
 export async function registerForPushNotifications(): Promise<string | null> {
-  if (!Device.isDevice) {
+  const N = getNotifications();
+  if (!N || !isPushSupported()) {
     return null;
   }
 
-  const { status: existingStatus } = await Notifications.getPermissionsAsync();
+  const { status: existingStatus } = await N.getPermissionsAsync();
   let finalStatus = existingStatus;
 
   if (existingStatus !== "granted") {
-    const { status } = await Notifications.requestPermissionsAsync();
+    const { status } = await N.requestPermissionsAsync();
     finalStatus = status;
   }
 
@@ -22,23 +47,23 @@ export async function registerForPushNotifications(): Promise<string | null> {
     return null;
   }
 
-  const tokenData = await Notifications.getExpoPushTokenAsync();
+  const tokenData = await N.getExpoPushTokenAsync();
   const token = tokenData.data;
 
   if (Platform.OS === "android") {
-    await Notifications.setNotificationChannelAsync(SIREN_CHANNEL_ID, {
+    await N.setNotificationChannelAsync(SIREN_CHANNEL_ID, {
       name: "Task Siren Alerts",
       description: "Loud siren sound when a new task is assigned",
-      importance: Notifications.AndroidImportance.MAX,
+      importance: N.AndroidImportance.MAX,
       sound: SIREN_SOUND,
       vibrationPattern: [0, 500, 200, 500, 200, 500],
       enableVibrate: true,
-      lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
+      lockscreenVisibility: N.AndroidNotificationVisibility.PUBLIC,
       bypassDnd: true,
     });
-    await Notifications.setNotificationChannelAsync("default", {
+    await N.setNotificationChannelAsync("default", {
       name: "Default",
-      importance: Notifications.AndroidImportance.HIGH,
+      importance: N.AndroidImportance.HIGH,
     });
   }
 
@@ -92,10 +117,13 @@ export async function sendTaskSirenPush(
   }
 }
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-  }),
-});
+const N = getNotifications();
+if (N) {
+  N.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true,
+      shouldPlaySound: true,
+      shouldSetBadge: true,
+    }),
+  });
+}
