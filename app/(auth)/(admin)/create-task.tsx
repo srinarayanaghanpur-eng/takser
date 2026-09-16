@@ -1,7 +1,7 @@
 import { View, Text, ScrollView, TextInput, TouchableOpacity, ActivityIndicator, KeyboardAvoidingView, Platform } from "react-native";
 import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
 import { useState, useEffect } from "react";
-import { useRouter, Stack } from "expo-router";
+import { useRouter } from "expo-router";
 import { Timestamp } from "firebase/firestore";
 import { createTask, getAllTeachers, createNotification, getUsersByIds } from "../../../src/lib/firestore";
 import { sendTaskSirenPush } from "../../../src/lib/notifications";
@@ -165,8 +165,14 @@ export default function CreateTaskScreen() {
 
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-      <Stack.Screen options={{ headerShown: true, title: "Create Task", headerTintColor: colors.primary[500] }} />
-      <ScrollView style={{ flex: 1, backgroundColor: "#F8FAFC" }} contentContainerStyle={{ padding: 16, paddingBottom: 100 }}>
+      <ScrollView style={{ flex: 1, backgroundColor: "#F8FAFC" }} contentContainerStyle={{ paddingBottom: 100 }}>
+        <Animated.View entering={FadeInDown.duration(500)} style={{ backgroundColor: colors.primary[500], paddingTop: 60, paddingBottom: 24, paddingHorizontal: 20, borderBottomLeftRadius: 28, borderBottomRightRadius: 28 }}>
+          <Text style={{ fontSize: 24, fontWeight: "800", color: "#FFFFFF" }}>Create Task</Text>
+          <Text style={{ fontSize: 14, color: "rgba(255,255,255,0.6)", marginTop: 4 }}>
+            Assign work to your teachers
+          </Text>
+        </Animated.View>
+        <View style={{ padding: 16 }}>
         {/* Title */}
         <Text style={{ fontSize: 13, fontWeight: "700", color: "#64748B", marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 }}>
           Task Title
@@ -364,6 +370,7 @@ export default function CreateTaskScreen() {
             <Text style={{ color: "#FFFFFF", fontSize: 16, fontWeight: "800" }}>Create & Assign Task</Text>
           )}
         </TouchableOpacity>
+        </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
