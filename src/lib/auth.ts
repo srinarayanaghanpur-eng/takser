@@ -1,10 +1,15 @@
 import {
   signInWithEmailAndPassword,
   signOut as firebaseSignOut,
+  createUserWithEmailAndPassword,
+  updatePassword,
+  deleteUser,
+  getAuth,
   type User,
 } from "firebase/auth";
-import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
-import { auth, db } from "./firebase";
+import { initializeApp, getApps } from "firebase/app";
+import { doc, getDoc, setDoc, updateDoc, deleteDoc, serverTimestamp } from "firebase/firestore";
+import { auth, db, firebaseConfig } from "./firebase";
 import type { AppUser } from "../types";
 
 export async function loginWithEmployeeId(
@@ -35,4 +40,84 @@ export async function createUser(
     ...data,
     createdAt: serverTimestamp(),
   });
+}
+
+function getSecondaryAuth() {
+  const existing = getApps().find((a) => a.name === "AdminSecondary");
+  const app = existing ?? initializeApp(firebaseConfig, "AdminSecondary");
+  return getAuth(app);
+}
+
+export interface NewTeacherInput {
+  employeeId: string;
+  password: string;
+  name: string;
+  department: string;
+  isClassTeacher: boolean;
+}
+
+export async function createTeacherAccount(
+  input: NewTeacherInput
+): Promise<{ uid: string }> {
+  const employeeId = input.employeeId.trim().toLowerCase();
+  if (!employeeId) throw new Error("Employee ID is required");
+  if (!input.password || input.password.length < 6)
+    throw new Error("Password must be at least 6 characters");
+  if (!input.name.trim()) throw new Error("Name is required");
+
+  const email = `${employeeId}@school.local`;
+  const secondaryAuth = getSecondaryAuth();
+  const cred = await createUserWithEmailAndPassword(secondaryAuth, email, input.password);
+  const uid = cred.user.uid;
+  try {
+    await setDoc(doc(db, "users", uid), {
+      name: input.name.trim(),
+      email,
+      employeeId,
+      role: "teacher",
+      department: input.department.trim() || "General",
+      isClassTeacher: input.isClassTeacher,
+      initialPassword: input.password,
+      createdAt: serverTimestamp(),
+    });
+  } catch (e) {
+    await deleteUser(cred.user).catch(() => {});
+    throw e;
+  } finally {
+    await firebaseSignOut(secondaryAuth).catch(() => {});
+  }
+  return { uid };
+}
+
+export async function updateTeacherProfile(
+  uid: string,
+  data: { name: string; department: string; isClassTeacher: boolean }
+): Promise<void> {
+  if (!data.name.trim()) throw new Error("Name is required");
+  await updateDoc(doc(db, "users", uid), {
+    name: data.name.trim(),
+    department: data.department.trim() || "General",
+    isClassTeacher: data.isClassTeacher,
+  });
+}
+
+export async function resetTeacherPassword(
+  email: string,
+  currentPassword: string,
+  newPassword: string
+): Promise<void> {
+  if (!newPassword || newPassword.length < 6)
+    throw new Error("New password must be at least 6 characters");
+  const secondaryAuth = getSecondaryAuth();
+  const cred = await signInWithEmailAndPassword(secondaryAuth, email, currentPassword);
+  try {
+    await updatePassword(cred.user, newPassword);
+    await updateDoc(doc(db, "users", cred.user.uid), { initialPassword: newPassword });
+  } finally {
+    await firebaseSignOut(secondaryAuth).catch(() => {});
+  }
+}
+
+export async function deleteTeacherAccount(uid: string): Promise<void> {
+  await deleteDoc(doc(db, "users", uid));
 }

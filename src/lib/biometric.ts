@@ -21,7 +21,7 @@ export async function authenticateToMarkTask(
   if (Platform.OS === "web") {
     return confirmAction(
       "Verify Identity",
-      `Biometric check is not available in the browser demo.\n\nConfirm to ${actionLabel}.`,
+      `Confirm to ${actionLabel}.`,
       "Verify"
     );
   }

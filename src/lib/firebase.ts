@@ -2,6 +2,7 @@ import { initializeApp, getApps, getApp } from "firebase/app";
 import {
   initializeAuth,
   getAuth,
+  // @ts-expect-error - exposed at runtime on native builds, absent from web types
   getReactNativePersistence,
 } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
@@ -17,6 +18,8 @@ const firebaseConfig = {
   messagingSenderId: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
   appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID,
 };
+
+export { firebaseConfig };
 
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 

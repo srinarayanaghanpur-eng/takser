@@ -5,7 +5,6 @@ import { useRouter } from "expo-router";
 import { loginWithEmployeeId } from "../src/lib/auth";
 import { updateUserPushToken } from "../src/lib/firestore";
 import { registerForPushNotifications } from "../src/lib/notifications";
-import { makeDemoUser } from "../src/lib/demo";
 import { tapTick, successBuzz, errorBuzz } from "../src/lib/haptics";
 import { colors } from "../src/constants/theme";
 import { useAuthStore } from "../src/store/authStore";
@@ -17,13 +16,6 @@ export default function LoginScreen() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-
-  const handleDemoLogin = (role: "admin" | "teacher") => {
-    tapTick();
-    const { user, appUser } = makeDemoUser(role);
-    setUser(user, appUser);
-    router.replace("/(auth)");
-  };
 
   const handleLogin = async () => {
     if (!employeeId.trim() || !password.trim()) {
@@ -170,45 +162,6 @@ export default function LoginScreen() {
               <Text style={{ color: "#FFFFFF", fontSize: 16, fontWeight: "800" }}>Sign In</Text>
             )}
           </TouchableOpacity>
-
-          <View style={{ flexDirection: "row", alignItems: "center", marginVertical: 16 }}>
-            <View style={{ flex: 1, height: 1, backgroundColor: "#E2E8F0" }} />
-            <Text style={{ marginHorizontal: 12, fontSize: 12, fontWeight: "700", color: "#94A3B8" }}>
-              DEMO MODE
-            </Text>
-            <View style={{ flex: 1, height: 1, backgroundColor: "#E2E8F0" }} />
-          </View>
-
-          <View style={{ flexDirection: "row", gap: 12 }}>
-            <TouchableOpacity
-              onPress={() => handleDemoLogin("teacher")}
-              style={{
-                flex: 1,
-                borderRadius: 14,
-                padding: 14,
-                alignItems: "center",
-                backgroundColor: "#EFF6FF",
-                borderWidth: 1,
-                borderColor: "#BFDBFE",
-              }}
-            >
-              <Text style={{ color: "#1A3A6B", fontSize: 14, fontWeight: "800" }}>Demo Teacher</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => handleDemoLogin("admin")}
-              style={{
-                flex: 1,
-                borderRadius: 14,
-                padding: 14,
-                alignItems: "center",
-                backgroundColor: "#FFFBEB",
-                borderWidth: 1,
-                borderColor: "#FDE68A",
-              }}
-            >
-              <Text style={{ color: "#92400E", fontSize: 14, fontWeight: "800" }}>Demo Admin</Text>
-            </TouchableOpacity>
-          </View>
         </Animated.View>
       </ScrollView>
     </KeyboardAvoidingView>

@@ -5,7 +5,6 @@ import { useRouter, Stack } from "expo-router";
 import { Timestamp } from "firebase/firestore";
 import { createTask, getAllTeachers, createNotification, getUsersByIds } from "../../../src/lib/firestore";
 import { sendTaskSirenPush } from "../../../src/lib/notifications";
-import { isDemoUid } from "../../../src/lib/demo";
 import { successBuzz } from "../../../src/lib/haptics";
 import { showAlert } from "../../../src/lib/confirm";
 import { useAuthStore } from "../../../src/store/authStore";
@@ -132,7 +131,6 @@ export default function CreateTaskScreen() {
       };
       const newTaskId = await createTask(taskData);
       const assignedIds = computeAssignedTo();
-      const demo = isDemoUid(appUser?.uid);
       await Promise.all(
         assignedIds.map((uid) =>
           createNotification({
@@ -145,18 +143,16 @@ export default function CreateTaskScreen() {
           }).catch(() => {})
         )
       );
-      if (!demo) {
-        try {
-          const assignees = await getUsersByIds(assignedIds);
-          await sendTaskSirenPush(
-            assignees
-              .filter((u) => u.fcmToken)
-              .map((u) => ({ pushToken: u.fcmToken as string, taskId: newTaskId })),
-            "New task assigned",
-            `${taskData.title} is due ${deadlineLabel}.`
-          );
-        } catch {}
-      }
+      try {
+        const assignees = await getUsersByIds(assignedIds);
+        await sendTaskSirenPush(
+          assignees
+            .filter((u) => u.fcmToken)
+            .map((u) => ({ pushToken: u.fcmToken as string, taskId: newTaskId })),
+          "New task assigned",
+          `${taskData.title} is due ${deadlineLabel}.`
+        );
+      } catch {}
       showAlert("Success", "Task created and assigned successfully");
       successBuzz();
       router.back();
@@ -378,7 +374,7 @@ const inputStyle = {
   borderRadius: 14,
   padding: 14,
   fontSize: 15,
-  fontWeight: "600",
+  fontWeight: "600" as const,
   color: "#0F172A",
   borderWidth: 1,
   borderColor: "#E2E8F0",
@@ -386,7 +382,7 @@ const inputStyle = {
 
 const labelStyle = {
   fontSize: 13,
-  fontWeight: "700",
+  fontWeight: "700" as const,
   color: "#64748B",
   marginBottom: 8,
   textTransform: "uppercase" as const,

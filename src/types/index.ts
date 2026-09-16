@@ -31,6 +31,7 @@ export interface AppUser {
   isClassTeacher?: boolean;
   photoURL?: string;
   fcmToken?: string;
+  initialPassword?: string;
   createdAt: Timestamp;
 }
 
