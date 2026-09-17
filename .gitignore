@@ -39,6 +39,7 @@ service-account.json
 # local dev logs
 expo-log*.txt
 expo-err*.txt
+*.log
 
 # typescript
 *.tsbuildinfo
