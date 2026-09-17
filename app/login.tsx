@@ -5,7 +5,7 @@ import { useRouter } from "expo-router";
 import { loginWithEmployeeId } from "../src/lib/auth";
 import { updateUserPushToken } from "../src/lib/firestore";
 import { registerForPushNotifications } from "../src/lib/notifications";
-import { tapTick, successBuzz, errorBuzz } from "../src/lib/haptics";
+import { successBuzz, errorBuzz } from "../src/lib/haptics";
 import { colors } from "../src/constants/theme";
 import { useAuthStore } from "../src/store/authStore";
 
