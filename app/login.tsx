@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ActivityIndicator, ScrollView } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ActivityIndicator, ScrollView, Image } from "react-native";
 import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
 import { useRouter } from "expo-router";
 import { loginWithEmployeeId } from "../src/lib/auth";
@@ -44,30 +44,60 @@ export default function LoginScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={{ flex: 1, backgroundColor: colors.primary[500] }}
+      style={{ flex: 1, backgroundColor: "#F7FAFF" }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
+      <View pointerEvents="none" style={{ position: "absolute", top: -90, right: -90, width: 260, height: 260, borderRadius: 130, backgroundColor: "rgba(96,165,250,0.14)" }} />
+      <View pointerEvents="none" style={{ position: "absolute", bottom: -70, left: -70, width: 220, height: 220, borderRadius: 110, backgroundColor: "rgba(59,130,246,0.10)" }} />
       <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: "center", padding: 24 }}>
-        <Animated.View entering={FadeInDown.duration(600)} style={{ alignItems: "center", marginBottom: 48 }}>
+        <Animated.View entering={FadeInDown.duration(600)} style={{ alignItems: "center", marginBottom: 36 }}>
           <View
             style={{
-              width: 72,
-              height: 72,
-              borderRadius: 20,
-              backgroundColor: "rgba(255,255,255,0.15)",
-              justifyContent: "center",
+              flexDirection: "row",
               alignItems: "center",
-              marginBottom: 16,
+              gap: 8,
+              paddingHorizontal: 12,
+              paddingVertical: 7,
+              borderRadius: 999,
+              backgroundColor: "rgba(255,255,255,0.7)",
               borderWidth: 1,
-              borderColor: "rgba(255,255,255,0.2)",
+              borderColor: "rgba(59,130,246,0.12)",
+              marginBottom: 20,
             }}
           >
-            <Text style={{ fontSize: 36 }}>{"🎓"}</Text>
+            <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: "#3B82F6" }} />
+            <Text style={{ fontSize: 9, fontWeight: "800", color: "#6B86B8", letterSpacing: 1.4 }}>
+              SRI NARAYANA TEACHER TASKS
+            </Text>
           </View>
-          <Text style={{ fontSize: 24, fontWeight: "800", color: "#FFFFFF", marginBottom: 4 }}>
+          <View
+            style={{
+              width: 116,
+              height: 116,
+              borderRadius: 58,
+              backgroundColor: "#FFFFFF",
+              justifyContent: "center",
+              alignItems: "center",
+              marginBottom: 20,
+              borderWidth: 1,
+              borderColor: "rgba(59,130,246,0.2)",
+              shadowColor: "#1D4ED8",
+              shadowOffset: { width: 0, height: 14 },
+              shadowOpacity: 0.22,
+              shadowRadius: 22,
+              elevation: 8,
+            }}
+          >
+            <Image
+              source={require("../assets/splash-icon.png")}
+              style={{ width: 84, height: 84, borderRadius: 18 }}
+              resizeMode="contain"
+            />
+          </View>
+          <Text style={{ fontSize: 27, fontWeight: "800", color: "#173B8E", letterSpacing: -0.5, marginBottom: 4 }}>
             Welcome Back
           </Text>
-          <Text style={{ fontSize: 15, color: "rgba(255,255,255,0.6)", fontWeight: "500" }}>
+          <Text style={{ fontSize: 15, color: "#6B86B8", fontWeight: "500" }}>
             Sign in to your account
           </Text>
         </Animated.View>
@@ -75,14 +105,16 @@ export default function LoginScreen() {
         <Animated.View
           entering={FadeInUp.duration(600).delay(150)}
           style={{
-            backgroundColor: "rgba(255,255,255,0.95)",
+            backgroundColor: "rgba(255,255,255,0.9)",
             borderRadius: 24,
             padding: 24,
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 10 },
-            shadowOpacity: 0.15,
+            borderWidth: 1,
+            borderColor: "rgba(59,130,246,0.12)",
+            shadowColor: "#1D4ED8",
+            shadowOffset: { width: 0, height: 12 },
+            shadowOpacity: 0.12,
             shadowRadius: 30,
-            elevation: 10,
+            elevation: 8,
           }}
         >
           {error ? (
@@ -149,11 +181,16 @@ export default function LoginScreen() {
             onPress={handleLogin}
             disabled={loading}
             style={{
-              backgroundColor: colors.primary[500],
+              backgroundColor: "#1D4ED8",
               borderRadius: 14,
               padding: 16,
               alignItems: "center",
               opacity: loading ? 0.6 : 1,
+              shadowColor: "#1D4ED8",
+              shadowOffset: { width: 0, height: 6 },
+              shadowOpacity: 0.3,
+              shadowRadius: 12,
+              elevation: 5,
             }}
           >
             {loading ? (
