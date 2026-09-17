@@ -32,6 +32,7 @@ export interface AppUser {
   photoURL?: string;
   fcmToken?: string;
   initialPassword?: string;
+  disabled?: boolean;
   createdAt: Timestamp;
 }
 

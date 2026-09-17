@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Image } from "react-native";
 import { useState, useEffect } from "react";
 import { useLocalSearchParams, Stack } from "expo-router";
 import { format } from "date-fns";
@@ -63,6 +63,16 @@ export default function AdminTaskDetail() {
             <DetailRow label="Status" value={task.status.toUpperCase()} />
             <DetailRow label="Assigned To" value={`${task.assignedTo.length} teacher(s)`} />
           </View>
+          {task.proofImageUrl ? (
+            <View style={{ marginTop: 16 }}>
+              <Text style={{ fontSize: 12, fontWeight: "700", color: "#94A3B8", marginBottom: 8 }}>PROOF OF WORK</Text>
+              <Image
+                source={{ uri: task.proofImageUrl }}
+                style={{ width: "100%", height: 200, borderRadius: 12, backgroundColor: "#F1F5F9" }}
+                resizeMode="cover"
+              />
+            </View>
+          ) : null}
         </GlassCard>
 
         {/* Comments */}

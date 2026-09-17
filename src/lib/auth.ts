@@ -8,7 +8,7 @@ import {
   type User,
 } from "firebase/auth";
 import { initializeApp, getApps } from "firebase/app";
-import { doc, getDoc, setDoc, updateDoc, deleteDoc, serverTimestamp } from "firebase/firestore";
+import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db, firebaseConfig } from "./firebase";
 import type { AppUser } from "../types";
 
@@ -25,7 +25,9 @@ export async function loginWithEmployeeId(
 export async function fetchAppUser(uid: string): Promise<AppUser> {
   const docSnap = await getDoc(doc(db, "users", uid));
   if (!docSnap.exists()) throw new Error("User not found");
-  return { uid, ...docSnap.data() } as AppUser;
+  const appUser = { uid, ...docSnap.data() } as AppUser;
+  if (appUser.disabled) throw new Error("Account has been disabled");
+  return appUser;
 }
 
 export async function signOut(): Promise<void> {
@@ -119,5 +121,7 @@ export async function resetTeacherPassword(
 }
 
 export async function deleteTeacherAccount(uid: string): Promise<void> {
-  await deleteDoc(doc(db, "users", uid));
+  // Soft-disable: blocks login immediately, preserves task history.
+  // (Auth accounts can't be deleted from client SDKs.)
+  await updateDoc(doc(db, "users", uid), { disabled: true });
 }

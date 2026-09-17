@@ -1,9 +1,10 @@
 import { View, Text, ScrollView, RefreshControl, TouchableOpacity } from "react-native";
 import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "expo-router";
 import { useAuthStore } from "../../../src/store/authStore";
 import { useTeacherTasks } from "../../../src/hooks/useTasks";
+import { scheduleDeadlineReminders } from "../../../src/lib/notifications";
 import { TaskCard } from "../../../src/components/TaskCard";
 import { StatCard } from "../../../src/components/StatCard";
 import { GlassCard } from "../../../src/components/GlassCard";
@@ -24,6 +25,19 @@ export default function TeacherDashboard() {
     await refresh();
     setRefreshing(false);
   }, [refresh]);
+
+  useEffect(() => {
+    if (tasks.length > 0) {
+      scheduleDeadlineReminders(
+        tasks.map((t) => ({
+          id: t.id,
+          title: t.title,
+          deadlineMillis: t.deadline?.toDate?.()?.getTime() ?? 0,
+          status: t.status,
+        }))
+      ).catch(() => {});
+    }
+  }, [tasks]);
 
   const todayTasks = tasks.filter((t) => {
     if (!t.deadline) return false;

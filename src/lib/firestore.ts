@@ -31,7 +31,9 @@ export async function getAllTeachers(): Promise<AppUser[]> {
     orderBy("name", "asc")
   );
   const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ uid: d.id, ...d.data() } as AppUser));
+  return snap.docs
+    .map((d) => ({ uid: d.id, ...d.data() } as AppUser))
+    .filter((u) => !u.disabled);
 }
 
 export async function getTasksForTeacher(
@@ -170,6 +172,10 @@ export async function getUsersByIds(uids: string[]): Promise<AppUser[]> {
 
 export async function updateUserPushToken(uid: string, pushToken: string): Promise<void> {
   await updateDoc(doc(db, FIRESTORE_COLLECTIONS.USERS, uid), { fcmToken: pushToken });
+}
+
+export async function updateTaskProof(taskId: string, proofImageUrl: string): Promise<void> {
+  await updateDoc(doc(db, FIRESTORE_COLLECTIONS.TASKS, taskId), { proofImageUrl });
 }
 
 export async function getTeacherStats(teacherId: string): Promise<TeacherStats> {

@@ -5,7 +5,7 @@ import {
   // @ts-expect-error - exposed at runtime on native builds, absent from web types
   getReactNativePersistence,
 } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { initializeFirestore, persistentLocalCache } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Platform } from "react-native";
@@ -30,7 +30,9 @@ const auth =
         persistence: getReactNativePersistence(AsyncStorage),
       });
 
-const db = getFirestore(app);
+const db = initializeFirestore(app, {
+  localCache: persistentLocalCache(),
+});
 const storage = getStorage(app);
 
 export { app, auth, db, storage };

@@ -1,11 +1,12 @@
-import { View, Text, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, KeyboardAvoidingView, Platform } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, KeyboardAvoidingView, Platform, Image } from "react-native";
 import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
 import { useState, useEffect } from "react";
 import { useLocalSearchParams, useRouter, Stack } from "expo-router";
 import { format } from "date-fns";
 import { useAuthStore } from "../../../../src/store/authStore";
 import { useTaskDetail } from "../../../../src/hooks/useTasks";
-import { updateTaskStatus, addTaskComment, getTaskComments } from "../../../../src/lib/firestore";
+import { updateTaskStatus, addTaskComment, getTaskComments, updateTaskProof } from "../../../../src/lib/firestore";
+import { pickProofPhoto, uploadProofPhoto } from "../../../../src/lib/storage";
 import { confirmAction, showAlert } from "../../../../src/lib/confirm";
 import { successBuzz } from "../../../../src/lib/haptics";
 import { authenticateToMarkTask } from "../../../../src/lib/biometric";
@@ -34,6 +35,7 @@ export default function TeacherTaskDetail() {
   const [comments, setComments] = useState<TaskComment[]>([]);
   const [commentText, setCommentText] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -67,8 +69,23 @@ export default function TeacherTaskDetail() {
     }
   };
 
-  const handleAddComment = async () => {
-    if (!commentText.trim() || !appUser) return;
+  const handleAddProof = async () => {
+    setUploading(true);
+    try {
+      const photo = await pickProofPhoto();
+      if (!photo) return;
+      const url = await uploadProofPhoto(id as string, photo);
+      await updateTaskProof(id as string, url);
+      successBuzz();
+      refresh();
+    } catch (e) {
+      showAlert("Error", e instanceof Error ? e.message : "Failed to upload photo");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleAddComment = async () => {    if (!commentText.trim() || !appUser) return;
     setSubmitting(true);
     try {
       await addTaskComment(id as string, appUser.uid, appUser.name, commentText.trim());
@@ -142,6 +159,39 @@ export default function TeacherTaskDetail() {
                 <Text style={{ color: "#166534", fontWeight: "800", fontSize: 15 }}>✅ Completed</Text>
               </View>
             )}
+          </Animated.View>
+
+          {/* Proof */}
+          <Animated.View entering={FadeInUp.duration(400).delay(150)}>
+          <GlassCard style={{ padding: 16, marginBottom: 16 }}>
+            <Text style={{ fontSize: 16, fontWeight: "700", color: "#0F172A", marginBottom: 12 }}>Proof of Work</Text>
+            {task.proofImageUrl ? (
+              <Image
+                source={{ uri: task.proofImageUrl }}
+                style={{ width: "100%", height: 200, borderRadius: 12, marginBottom: 12, backgroundColor: "#F1F5F9" }}
+                resizeMode="cover"
+              />
+            ) : (
+              <Text style={{ fontSize: 14, color: "#94A3B8", textAlign: "center", paddingVertical: 12 }}>
+                No proof attached yet
+              </Text>
+            )}
+            {task.status !== "completed" && (
+              <TouchableOpacity
+                onPress={handleAddProof}
+                disabled={uploading}
+                style={{ backgroundColor: "#EFF6FF", borderWidth: 1, borderColor: "#BFDBFE", borderRadius: 12, padding: 12, alignItems: "center", opacity: uploading ? 0.6 : 1 }}
+              >
+                {uploading ? (
+                  <ActivityIndicator color="#1A3A6B" />
+                ) : (
+                  <Text style={{ color: "#1A3A6B", fontWeight: "700" }}>
+                    {task.proofImageUrl ? "Replace Photo" : "Add Proof Photo"}
+                  </Text>
+                )}
+              </TouchableOpacity>
+            )}
+          </GlassCard>
           </Animated.View>
 
           {/* Comments */}

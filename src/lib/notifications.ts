@@ -128,3 +128,40 @@ if (N) {
     }),
   });
 }
+
+export interface ReminderTask {
+  id: string;
+  title: string;
+  deadlineMillis: number;
+  status: string;
+}
+
+export async function scheduleDeadlineReminders(tasks: ReminderTask[]): Promise<void> {
+  const N = getNotifications();
+  if (!N || Platform.OS === "web") return;
+  try {
+    const now = Date.now();
+    for (const task of tasks) {
+      const identifier = `deadline-${task.id}`;
+      await N.cancelScheduledNotificationAsync(identifier).catch(() => {});
+      if (task.status === "completed") continue;
+      const msLeft = task.deadlineMillis - now;
+      if (msLeft <= 0 || msLeft > 24 * 3600 * 1000) continue;
+      // Remind 1 hour before deadline (or in 10s if sooner)
+      const fireInSec = Math.max(10, Math.floor(msLeft / 1000) - 3600);
+      await N.scheduleNotificationAsync({
+        identifier,
+        content: {
+          title: "Deadline approaching",
+          body: `${task.title} is due soon.`,
+          sound: undefined,
+          data: { taskId: task.id, type: "deadline_approaching" },
+        },
+        trigger: {
+          type: N.SchedulableTriggerInputTypes.TIME_INTERVAL,
+          seconds: fireInSec,
+        },
+      });
+    }
+  } catch {}
+}
