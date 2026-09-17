@@ -94,13 +94,16 @@ export async function createTeacherAccount(
 export async function updateTeacherProfile(
   uid: string,
   data: { name: string; department: string; isClassTeacher: boolean }
-): Promise<void> {
-  if (!data.name.trim()) throw new Error("Name is required");
+): Promise<void> {  if (!data.name.trim()) throw new Error("Name is required");
   await updateDoc(doc(db, "users", uid), {
     name: data.name.trim(),
     department: data.department.trim() || "General",
     isClassTeacher: data.isClassTeacher,
   });
+}
+
+export async function updateUserPhoto(uid: string, photoURL: string): Promise<void> {
+  await updateDoc(doc(db, "users", uid), { photoURL });
 }
 
 export async function resetTeacherPassword(

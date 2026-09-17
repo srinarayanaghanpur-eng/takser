@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, RefreshControl, TextInput, TouchableOpacity } from "react-native";
+import { View, Text, ScrollView, RefreshControl, TextInput, TouchableOpacity, Image } from "react-native";
 import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
 import { useState, useCallback, useEffect } from "react";
 import { useRouter, useFocusEffect } from "expo-router";
@@ -116,10 +116,14 @@ export default function AdminTeachers() {
             >
             <GlassCard style={{ padding: 16, marginBottom: 8 }}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-                <View style={{ width: 44, height: 44, borderRadius: 14, backgroundColor: "#EFF6FF", justifyContent: "center", alignItems: "center" }}>
-                  <Text style={{ fontSize: 18, fontWeight: "800", color: colors.primary[500] }}>
-                    {teacher.name?.charAt(0)?.toUpperCase() ?? "T"}
-                  </Text>
+                <View style={{ width: 44, height: 44, borderRadius: 14, backgroundColor: "#EFF6FF", justifyContent: "center", alignItems: "center", overflow: "hidden" }}>
+                  {teacher.photoURL ? (
+                    <Image source={{ uri: teacher.photoURL }} style={{ width: 44, height: 44, borderRadius: 14 }} />
+                  ) : (
+                    <Text style={{ fontSize: 18, fontWeight: "800", color: colors.primary[500] }}>
+                      {teacher.name?.charAt(0)?.toUpperCase() ?? "T"}
+                    </Text>
+                  )}
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={{ fontSize: 16, fontWeight: "700", color: "#0F172A" }}>{teacher.name}</Text>

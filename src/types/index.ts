@@ -15,6 +15,14 @@ export type TaskCategory =
 
 export type TaskStatus = "pending" | "accepted" | "completed" | "delayed";
 
+export interface Subtask {
+  id: string;
+  title: string;
+  done: boolean;
+}
+
+export type TaskRecurrence = "none" | "daily" | "weekly";
+
 export type TaskAssignment =
   | { type: "individual"; teacherId: string }
   | { type: "class_teacher" }
@@ -55,6 +63,10 @@ export interface Task {
   completionNote?: string;
   proofImageUrl?: string;
   proofDocUrl?: string;
+  proofDocName?: string;
+  seenBy?: string[];
+  subtasks?: Subtask[];
+  recurrence?: TaskRecurrence;
   reminderSent?: boolean;
 }
 

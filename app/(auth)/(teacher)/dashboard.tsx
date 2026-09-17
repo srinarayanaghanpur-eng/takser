@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, RefreshControl, TouchableOpacity } from "react-native";
+import { View, Text, ScrollView, RefreshControl, TouchableOpacity, TextInput } from "react-native";
 import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
 import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "expo-router";
@@ -19,6 +19,9 @@ export default function TeacherDashboard() {
   const teacherId = appUser?.uid ?? "";
   const { tasks, loading, error, refresh } = useTeacherTasks(teacherId);
   const [refreshing, setRefreshing] = useState(false);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [priorityFilter, setPriorityFilter] = useState("all");
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -49,6 +52,20 @@ export default function TeacherDashboard() {
   const completed = tasks.filter((t) => t.status === "completed");
   const pending = tasks.filter((t) => t.status === "pending" || t.status === "accepted");
   const urgent = tasks.filter((t) => t.priority === "urgent" && t.status !== "completed");
+
+  const STATUS_FILTERS = ["all", "pending", "accepted", "completed"];
+  const PRIORITY_FILTERS = ["all", "urgent", "high", "medium", "low"];
+
+  const visibleTasks = tasks.filter((t) => {
+    if (search.trim()) {
+      const q = search.trim().toLowerCase();
+      const hay = `${t.title} ${t.description ?? ""} ${t.category}`.toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    if (statusFilter !== "all" && t.status !== statusFilter) return false;
+    if (priorityFilter !== "all" && t.priority !== priorityFilter) return false;
+    return true;
+  });
 
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Good Morning" : hour < 17 ? "Good Afternoon" : "Good Evening";
@@ -134,10 +151,71 @@ export default function TeacherDashboard() {
         <Text style={{ fontSize: 18, fontWeight: "700", color: "#0F172A", marginBottom: 12 }}>
           Recent Tasks
         </Text>
-        {tasks.length === 0 ? (
-          <EmptyState title="No tasks yet" description="New tasks from admin will appear here" icon="📭" />
+        <TextInput
+          value={search}
+          onChangeText={setSearch}
+          placeholder="Search tasks..."
+          placeholderTextColor="#94A3B8"
+          style={{
+            backgroundColor: "#FFFFFF",
+            borderRadius: 12,
+            padding: 12,
+            fontSize: 14,
+            fontWeight: "600",
+            color: "#0F172A",
+            marginBottom: 8,
+            borderWidth: 1,
+            borderColor: "#E2E8F0",
+          }}
+        />
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 4 }}>
+          <View style={{ flexDirection: "row", gap: 6, paddingRight: 8 }}>
+            {STATUS_FILTERS.map((s) => (
+              <TouchableOpacity
+                key={`s-${s}`}
+                onPress={() => setStatusFilter(s)}
+                style={{
+                  paddingHorizontal: 12,
+                  paddingVertical: 7,
+                  borderRadius: 20,
+                  backgroundColor: statusFilter === s ? colors.primary[500] : "#FFFFFF",
+                  borderWidth: 1,
+                  borderColor: statusFilter === s ? colors.primary[500] : "#E2E8F0",
+                }}
+              >
+                <Text style={{ fontSize: 12, fontWeight: "700", color: statusFilter === s ? "#FFFFFF" : "#64748B", textTransform: "capitalize" }}>
+                  {s}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </ScrollView>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12 }}>
+          <View style={{ flexDirection: "row", gap: 6, paddingRight: 8 }}>
+            {PRIORITY_FILTERS.map((p) => (
+              <TouchableOpacity
+                key={`p-${p}`}
+                onPress={() => setPriorityFilter(p)}
+                style={{
+                  paddingHorizontal: 12,
+                  paddingVertical: 7,
+                  borderRadius: 20,
+                  backgroundColor: priorityFilter === p ? "#F59E0B" : "#FFFFFF",
+                  borderWidth: 1,
+                  borderColor: priorityFilter === p ? "#F59E0B" : "#E2E8F0",
+                }}
+              >
+                <Text style={{ fontSize: 12, fontWeight: "700", color: priorityFilter === p ? "#FFFFFF" : "#64748B", textTransform: "capitalize" }}>
+                  {p}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </ScrollView>
+        {visibleTasks.length === 0 ? (
+          <EmptyState title={tasks.length === 0 ? "No tasks yet" : "No matching tasks"} description={tasks.length === 0 ? "New tasks from admin will appear here" : "Try a different search or filter"} icon="📭" />
         ) : (
-          tasks.slice(0, 10).map((task, i) => <TaskCard key={task.id} task={task} compact index={i} />)
+          visibleTasks.slice(0, 10).map((task, i) => <TaskCard key={task.id} task={task} compact index={i} />)
         )}
       </Animated.View>
     </ScrollView>

@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, RefreshControl, TouchableOpacity } from "react-native";
+import { View, Text, ScrollView, RefreshControl, TouchableOpacity, TextInput } from "react-native";
 import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
 import { useState, useCallback } from "react";
 import { useRouter } from "expo-router";
@@ -17,6 +17,8 @@ export default function AdminDashboard() {
   const appUser = useAuthStore((s) => s.appUser);
   const { tasks, loading, error, refresh } = useAdminTasks();
   const [refreshing, setRefreshing] = useState(false);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -49,6 +51,18 @@ export default function AdminDashboard() {
     }))
     .sort((a, b) => b.completed - a.completed)
     .slice(0, 5);
+
+  const STATUS_FILTERS = ["all", "pending", "accepted", "completed", "delayed"];
+
+  const visibleTasks = tasks.filter((t) => {
+    if (search.trim()) {
+      const q = search.trim().toLowerCase();
+      const hay = `${t.title} ${t.description ?? ""} ${t.category}`.toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    if (statusFilter !== "all" && t.status !== statusFilter) return false;
+    return true;
+  });
 
   if (loading && !refreshing) return <LoadingState message="Loading admin dashboard..." />;
   if (error) return <ErrorState message={error} onRetry={refresh} />;
@@ -142,10 +156,49 @@ export default function AdminDashboard() {
       {/* Recent Tasks */}
       <Animated.View entering={FadeInUp.duration(500).delay(250)} style={{ paddingHorizontal: 16 }}>
         <Text style={{ fontSize: 18, fontWeight: "700", color: "#0F172A", marginBottom: 12 }}>Recent Tasks</Text>
-        {tasks.length === 0 ? (
-          <EmptyState title="No tasks created yet" description="Create your first task to get started" icon="📋" />
+        <TextInput
+          value={search}
+          onChangeText={setSearch}
+          placeholder="Search all tasks..."
+          placeholderTextColor="#94A3B8"
+          style={{
+            backgroundColor: "#FFFFFF",
+            borderRadius: 12,
+            padding: 12,
+            fontSize: 14,
+            fontWeight: "600",
+            color: "#0F172A",
+            marginBottom: 8,
+            borderWidth: 1,
+            borderColor: "#E2E8F0",
+          }}
+        />
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12 }}>
+          <View style={{ flexDirection: "row", gap: 6, paddingRight: 8 }}>
+            {STATUS_FILTERS.map((s) => (
+              <TouchableOpacity
+                key={s}
+                onPress={() => setStatusFilter(s)}
+                style={{
+                  paddingHorizontal: 12,
+                  paddingVertical: 7,
+                  borderRadius: 20,
+                  backgroundColor: statusFilter === s ? colors.primary[500] : "#FFFFFF",
+                  borderWidth: 1,
+                  borderColor: statusFilter === s ? colors.primary[500] : "#E2E8F0",
+                }}
+              >
+                <Text style={{ fontSize: 12, fontWeight: "700", color: statusFilter === s ? "#FFFFFF" : "#64748B", textTransform: "capitalize" }}>
+                  {s}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </ScrollView>
+        {visibleTasks.length === 0 ? (
+          <EmptyState title={tasks.length === 0 ? "No tasks created yet" : "No matching tasks"} description={tasks.length === 0 ? "Create your first task to get started" : "Try a different search or filter"} icon="📋" />
         ) : (
-          tasks.slice(0, 10).map((task, i) => <TaskCard key={task.id} task={task} compact index={i} />)
+          visibleTasks.slice(0, 10).map((task, i) => <TaskCard key={task.id} task={task} compact index={i} />)
         )}
       </Animated.View>
     </ScrollView>

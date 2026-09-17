@@ -1,9 +1,9 @@
 import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Image } from "react-native";
 import { useState, useEffect } from "react";
-import { useLocalSearchParams, Stack } from "expo-router";
+import { useLocalSearchParams, useRouter, Stack } from "expo-router";
 import { format } from "date-fns";
 import { useTaskDetail } from "../../../../src/hooks/useTasks";
-import { getTaskComments } from "../../../../src/lib/firestore";
+import { getTaskComments, getUsersByIds } from "../../../../src/lib/firestore";
 import { PriorityBadge } from "../../../../src/components/PriorityBadge";
 import { GlassCard } from "../../../../src/components/GlassCard";
 import { LoadingState } from "../../../../src/components/LoadingState";
@@ -18,12 +18,32 @@ const categoryLabels: Record<string, string> = {
 
 export default function AdminTaskDetail() {
   const { id } = useLocalSearchParams();
+  const router = useRouter();
   const { task, loading, error, refresh } = useTaskDetail(id as string);
   const [comments, setComments] = useState<TaskComment[]>([]);
+  const [seenNames, setSeenNames] = useState<string>("");
 
   useEffect(() => {
     if (id) getTaskComments(id as string).then(setComments).catch(() => {});
   }, [id]);
+
+  useEffect(() => {
+    const seen = task?.seenBy ?? [];
+    const unseen = (task?.assignedTo ?? []).filter((uid) => !seen.includes(uid));
+    if (seen.length === 0 && unseen.length === 0) {
+      setSeenNames("");
+      return;
+    }
+    getUsersByIds([...new Set([...seen, ...unseen])])
+      .then((users) => {
+        const byId = Object.fromEntries(users.map((u) => [u.uid, u.name]));
+        const seenList = seen.map((uid) => byId[uid] ?? "Someone").join(", ");
+        setSeenNames(
+          `${seen.length}/${(task?.assignedTo ?? []).length} seen${seenList ? ` · ${seenList}` : ""}`
+        );
+      })
+      .catch(() => setSeenNames(`${seen.length}/${(task?.assignedTo ?? []).length} seen`));
+  }, [task?.id, task?.seenBy?.length, task?.assignedTo?.length]);
 
   if (loading) return <LoadingState message="Loading task..." />;
   if (error || !task) return <ErrorState message={error ?? "Task not found"} onRetry={refresh} />;
@@ -62,7 +82,20 @@ export default function AdminTaskDetail() {
             <DetailRow label="Assignment" value={assignTypeLabels[(task.assignment as any)?.type] ?? "Unknown"} />
             <DetailRow label="Status" value={task.status.toUpperCase()} />
             <DetailRow label="Assigned To" value={`${task.assignedTo.length} teacher(s)`} />
+            {seenNames ? <DetailRow label="Seen By" value={seenNames} /> : null}
+            {task.subtasks && task.subtasks.length > 0 ? (
+              <DetailRow
+                label="Checklist"
+                value={`${task.subtasks.filter((s) => s.done).length}/${task.subtasks.length} steps done`}
+              />
+            ) : null}
           </View>
+          <TouchableOpacity
+            onPress={() => router.push(`/(auth)/(admin)/edit-task?id=${id}`)}
+            style={{ marginTop: 16, backgroundColor: "#EFF6FF", borderWidth: 1, borderColor: "#BFDBFE", borderRadius: 12, padding: 12, alignItems: "center" }}
+          >
+            <Text style={{ color: "#1A3A6B", fontWeight: "800", fontSize: 14 }}>✏️ Edit Task</Text>
+          </TouchableOpacity>
           {task.proofImageUrl ? (
             <View style={{ marginTop: 16 }}>
               <Text style={{ fontSize: 12, fontWeight: "700", color: "#94A3B8", marginBottom: 8 }}>PROOF OF WORK</Text>
@@ -71,6 +104,14 @@ export default function AdminTaskDetail() {
                 style={{ width: "100%", height: 200, borderRadius: 12, backgroundColor: "#F1F5F9" }}
                 resizeMode="cover"
               />
+            </View>
+          ) : null}
+          {task.proofDocUrl ? (
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginTop: 8, backgroundColor: "#F8FAFC", borderRadius: 12, padding: 12, borderWidth: 1, borderColor: "#E2E8F0" }}>
+              <Text style={{ fontSize: 20 }}>📄</Text>
+              <Text style={{ flex: 1, fontSize: 13, fontWeight: "600", color: "#334155" }} numberOfLines={1}>
+                {task.proofDocName ?? "Document"}
+              </Text>
             </View>
           ) : null}
         </GlassCard>

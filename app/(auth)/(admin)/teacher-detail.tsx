@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, TextInput, TouchableOpacity, ActivityIndicator, KeyboardAvoidingView, Platform, Switch } from "react-native";
+import { View, Text, ScrollView, TextInput, TouchableOpacity, ActivityIndicator, KeyboardAvoidingView, Platform, Switch, Image } from "react-native";
 import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
 import { useState, useEffect, useCallback } from "react";
 import { useLocalSearchParams, useRouter, Stack } from "expo-router";
@@ -137,10 +137,14 @@ export default function TeacherDetailScreen() {
       <ScrollView style={{ flex: 1, backgroundColor: "#F8FAFC" }} contentContainerStyle={{ padding: 16, paddingBottom: 100 }}>
         <Animated.View entering={FadeInDown.duration(400)}>
           <GlassCard style={{ padding: 20, marginBottom: 16, alignItems: "center" }}>
-            <View style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: colors.primary[500], justifyContent: "center", alignItems: "center", marginBottom: 12 }}>
-              <Text style={{ fontSize: 28, fontWeight: "800", color: "#FFFFFF" }}>
-                {teacher.name?.charAt(0)?.toUpperCase() ?? "T"}
-              </Text>
+            <View style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: colors.primary[500], justifyContent: "center", alignItems: "center", marginBottom: 12, overflow: "hidden" }}>
+              {teacher.photoURL ? (
+                <Image source={{ uri: teacher.photoURL }} style={{ width: 72, height: 72, borderRadius: 36 }} />
+              ) : (
+                <Text style={{ fontSize: 28, fontWeight: "800", color: "#FFFFFF" }}>
+                  {teacher.name?.charAt(0)?.toUpperCase() ?? "T"}
+                </Text>
+              )}
             </View>
             <Text style={{ fontSize: 20, fontWeight: "800", color: "#0F172A" }}>{teacher.name}</Text>
             <Text style={{ fontSize: 14, color: "#64748B", marginTop: 4 }}>

@@ -162,6 +162,11 @@ export default function LoginScreen() {
               <Text style={{ color: "#FFFFFF", fontSize: 16, fontWeight: "800" }}>Sign In</Text>
             )}
           </TouchableOpacity>
+          <TouchableOpacity onPress={() => router.push("/privacy")} style={{ marginTop: 16, alignItems: "center" }}>
+            <Text style={{ fontSize: 13, fontWeight: "600", color: "#64748B" }}>
+              Privacy Policy
+            </Text>
+          </TouchableOpacity>
         </Animated.View>
       </ScrollView>
     </KeyboardAvoidingView>

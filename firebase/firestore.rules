@@ -42,7 +42,7 @@ service cloud.firestore {
     match /tasks/{taskId} {
       allow read: if isAdmin() || isAssignedToTask(resource.data);
       allow create: if isAdmin();
-      allow update: if isAdmin() || (isTeacher() && isAssignedToTask(resource.data) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'completionNote', 'acceptedAt', 'completedAt', 'proofImageUrl', 'proofDocUrl']));
+      allow update: if isAdmin() || (isTeacher() && isAssignedToTask(resource.data) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'completionNote', 'acceptedAt', 'completedAt', 'proofImageUrl', 'proofDocUrl', 'seenBy', 'subtasks']));
       allow delete: if isAdmin();
 
       // Subcollections inherit parent rules — override for comments

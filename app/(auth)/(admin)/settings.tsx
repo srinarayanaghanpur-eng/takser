@@ -1,9 +1,12 @@
-import { View, Text, ScrollView, TouchableOpacity } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Image } from "react-native";
 import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
 import { useRouter } from "expo-router";
+import { useState } from "react";
 import { useAuthStore } from "../../../src/store/authStore";
 import { signOut } from "../../../src/lib/auth";
-import { confirmAction } from "../../../src/lib/confirm";
+import { getAllTeachers, getAllTasks } from "../../../src/lib/firestore";
+import { exportPerformancePdf } from "../../../src/lib/reports";
+import { confirmAction, showAlert } from "../../../src/lib/confirm";
 import { tapTick, successBuzz } from "../../../src/lib/haptics";
 import { GlassCard } from "../../../src/components/GlassCard";
 import { colors } from "../../../src/constants/theme";
@@ -20,6 +23,7 @@ interface MenuItem {
 export default function AdminSettings() {
   const router = useRouter();
   const appUser = useAuthStore((s) => s.appUser);
+  const [exporting, setExporting] = useState(false);
 
   const go = (href: "/(auth)/(admin)/profile" | "/(auth)/(admin)/teachers" | "/(auth)/(admin)/add-teacher" | "/(auth)/(admin)/notifications") => {
     tapTick();
@@ -32,6 +36,20 @@ export default function AdminSettings() {
     await signOut();
     successBuzz();
     router.replace("/login");
+  };
+
+  const handleExport = async () => {
+    tapTick();
+    setExporting(true);
+    try {
+      const [teachers, tasks] = await Promise.all([getAllTeachers(), getAllTasks()]);
+      await exportPerformancePdf(teachers, tasks);
+      successBuzz();
+    } catch (e) {
+      showAlert("Error", e instanceof Error ? e.message : "Failed to export report");
+    } finally {
+      setExporting(false);
+    }
   };
 
   const menu: MenuItem[] = [
@@ -63,6 +81,26 @@ export default function AdminSettings() {
       bg: "#FDF2F8",
       onPress: () => go("/(auth)/(admin)/notifications"),
     },
+    {
+      icon: "📢",
+      title: "Broadcast Notice",
+      subtitle: "Announce to all teachers",
+      bg: "#FFF7ED",
+      onPress: () => {
+        tapTick();
+        router.push("/(auth)/(admin)/broadcast");
+      },
+    },
+    {
+      icon: "🛡️",
+      title: "Privacy Policy",
+      subtitle: "How staff data is handled",
+      bg: "#F5F3FF",
+      onPress: () => {
+        tapTick();
+        router.push("/privacy");
+      },
+    },
   ];
 
   return (
@@ -74,10 +112,14 @@ export default function AdminSettings() {
         </Text>
         <TouchableOpacity onPress={() => go("/(auth)/(admin)/profile")} activeOpacity={0.8}>
           <GlassCard dark style={{ padding: 16, marginTop: 16, flexDirection: "row", alignItems: "center", gap: 12 }}>
-            <View style={{ width: 52, height: 52, borderRadius: 26, backgroundColor: "rgba(255,255,255,0.15)", justifyContent: "center", alignItems: "center" }}>
-              <Text style={{ fontSize: 22, fontWeight: "800", color: "#FFFFFF" }}>
-                {appUser?.name?.charAt(0)?.toUpperCase() ?? "A"}
-              </Text>
+            <View style={{ width: 52, height: 52, borderRadius: 26, backgroundColor: "rgba(255,255,255,0.15)", justifyContent: "center", alignItems: "center", overflow: "hidden" }}>
+              {appUser?.photoURL ? (
+                <Image source={{ uri: appUser.photoURL }} style={{ width: 52, height: 52, borderRadius: 26 }} />
+              ) : (
+                <Text style={{ fontSize: 22, fontWeight: "800", color: "#FFFFFF" }}>
+                  {appUser?.name?.charAt(0)?.toUpperCase() ?? "A"}
+                </Text>
+              )}
             </View>
             <View style={{ flex: 1 }}>
               <Text style={{ fontSize: 17, fontWeight: "800", color: "#FFFFFF" }}>{appUser?.name ?? "Admin"}</Text>
@@ -105,6 +147,18 @@ export default function AdminSettings() {
             </GlassCard>
           </TouchableOpacity>
         ))}
+
+        <TouchableOpacity
+          onPress={handleExport}
+          disabled={exporting}
+          style={{ backgroundColor: "#EFF6FF", borderWidth: 1, borderColor: "#BFDBFE", borderRadius: 14, padding: 16, alignItems: "center", marginTop: 8, opacity: exporting ? 0.6 : 1 }}
+        >
+          {exporting ? (
+            <ActivityIndicator color="#1A3A6B" />
+          ) : (
+            <Text style={{ color: "#1A3A6B", fontSize: 15, fontWeight: "800" }}>📄 Export Performance Report (PDF)</Text>
+          )}
+        </TouchableOpacity>
 
         <TouchableOpacity
           onPress={handleLogout}

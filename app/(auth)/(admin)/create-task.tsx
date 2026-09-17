@@ -11,7 +11,8 @@ import { useAuthStore } from "../../../src/store/authStore";
 import { GlassCard } from "../../../src/components/GlassCard";
 import { colors } from "../../../src/constants/theme";
 import { PRIORITY_CONFIG } from "../../../src/constants/config";
-import type { AppUser, TaskCategory, TaskPriority, TaskAssignment } from "../../../src/types";
+import type { AppUser, TaskCategory, TaskPriority, TaskAssignment, TaskRecurrence } from "../../../src/types";
+import { DateTimeField } from "../../../src/components/DateTimeField";
 
 const CATEGORIES: { key: TaskCategory; label: string; emoji: string }[] = [
   { key: "academic", label: "Academic", emoji: "📚" },
@@ -36,6 +37,12 @@ const DEADLINE_OPTIONS = [
   { key: "custom", label: "Custom" },
 ];
 
+const RECURRENCE_OPTIONS: { key: TaskRecurrence; label: string }[] = [
+  { key: "none", label: "Once" },
+  { key: "daily", label: "Daily" },
+  { key: "weekly", label: "Weekly" },
+];
+
 const ASSIGNMENT_TYPES: { key: string; label: string }[] = [
   { key: "individual", label: "Individual Teacher" },
   { key: "class_teacher", label: "Class Teachers" },
@@ -51,7 +58,13 @@ export default function CreateTaskScreen() {
   const [priority, setPriority] = useState<TaskPriority>("medium");
   const [category, setCategory] = useState<TaskCategory>("academic");
   const [deadlineLabel, setDeadlineLabel] = useState<"today" | "tomorrow" | "custom">("today");
-  const [customDate, setCustomDate] = useState("");
+  const [customDateTime, setCustomDateTime] = useState(() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 2);
+    d.setHours(17, 0, 0, 0);
+    return d;
+  });
+  const [recurrence, setRecurrence] = useState<TaskRecurrence>("none");
   const [assignmentType, setAssignmentType] = useState("individual");
   const [selectedTeacher, setSelectedTeacher] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState("");
@@ -79,8 +92,7 @@ export default function CreateTaskScreen() {
       d.setHours(23, 59, 0, 0);
       return d;
     }
-    const parsed = new Date(customDate);
-    return isNaN(parsed.getTime()) ? now : parsed;
+    return customDateTime;
   };
 
   const computeAssignment = (): TaskAssignment => {
@@ -122,6 +134,7 @@ export default function CreateTaskScreen() {
         category,
         deadline: Timestamp.fromDate(computeDeadline()),
         deadlineLabel,
+        recurrence,
         status: "pending" as const,
         assignment: computeAssignment(),
         assignedTo: computeAssignedTo(),
@@ -266,14 +279,34 @@ export default function CreateTaskScreen() {
           ))}
         </View>
         {deadlineLabel === "custom" && (
-          <TextInput
-            value={customDate}
-            onChangeText={setCustomDate}
-            placeholder="YYYY-MM-DD HH:MM"
-            placeholderTextColor="#94A3B8"
-            style={[inputStyle, { marginTop: 8 }]}
-          />
+          <View style={{ marginTop: 8 }}>
+            <DateTimeField value={customDateTime} onChange={setCustomDateTime} />
+          </View>
         )}
+
+        {/* Recurrence */}
+        <Text style={[labelStyle, { marginTop: 16 }]}>Repeat</Text>
+        <View style={{ flexDirection: "row", gap: 8 }}>
+          {RECURRENCE_OPTIONS.map((opt) => (
+            <TouchableOpacity
+              key={opt.key}
+              onPress={() => setRecurrence(opt.key as typeof recurrence)}
+              style={{
+                flex: 1,
+                paddingVertical: 10,
+                borderRadius: 10,
+                backgroundColor: recurrence === opt.key ? colors.primary[500] : "#FFFFFF",
+                borderWidth: 1,
+                borderColor: recurrence === opt.key ? colors.primary[500] : "#E2E8F0",
+                alignItems: "center",
+              }}
+            >
+              <Text style={{ fontSize: 12, fontWeight: "700", color: recurrence === opt.key ? "#FFFFFF" : "#64748B" }}>
+                {opt.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
 
         {/* Assignment */}
         <Text style={[labelStyle, { marginTop: 16 }]}>Assign To</Text>

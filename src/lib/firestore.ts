@@ -11,6 +11,8 @@ import {
   limit,
   serverTimestamp,
   documentId,
+  arrayUnion,
+  deleteDoc,
   type Timestamp as FirestoreTimestamp,
 } from "firebase/firestore";
 import { db } from "./firebase";
@@ -176,6 +178,35 @@ export async function updateUserPushToken(uid: string, pushToken: string): Promi
 
 export async function updateTaskProof(taskId: string, proofImageUrl: string): Promise<void> {
   await updateDoc(doc(db, FIRESTORE_COLLECTIONS.TASKS, taskId), { proofImageUrl });
+}
+
+export async function updateTaskProofDoc(
+  taskId: string,
+  proofDocUrl: string,
+  proofDocName: string
+): Promise<void> {
+  await updateDoc(doc(db, FIRESTORE_COLLECTIONS.TASKS, taskId), { proofDocUrl, proofDocName });
+}
+
+export async function updateTaskDoc(
+  taskId: string,
+  data: Partial<Pick<Task, "title" | "description" | "priority" | "category" | "deadline" | "deadlineLabel" | "assignment" | "assignedTo" | "recurrence" | "proofDocUrl" | "proofDocName">>
+): Promise<void> {
+  await updateDoc(doc(db, FIRESTORE_COLLECTIONS.TASKS, taskId), data);
+}
+
+export async function deleteTaskDoc(taskId: string): Promise<void> {
+  await deleteDoc(doc(db, FIRESTORE_COLLECTIONS.TASKS, taskId));
+}
+
+export async function markTaskSeen(taskId: string, uid: string): Promise<void> {
+  await updateDoc(doc(db, FIRESTORE_COLLECTIONS.TASKS, taskId), {
+    seenBy: arrayUnion(uid),
+  }).catch(() => {});
+}
+
+export async function saveSubtasks(taskId: string, subtasks: Task["subtasks"]): Promise<void> {
+  await updateDoc(doc(db, FIRESTORE_COLLECTIONS.TASKS, taskId), { subtasks });
 }
 
 export async function getTeacherStats(teacherId: string): Promise<TeacherStats> {

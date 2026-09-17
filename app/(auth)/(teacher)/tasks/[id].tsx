@@ -3,19 +3,21 @@ import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
 import { useState, useEffect } from "react";
 import { useLocalSearchParams, useRouter, Stack } from "expo-router";
 import { format } from "date-fns";
+import { Timestamp } from "firebase/firestore";
 import { useAuthStore } from "../../../../src/store/authStore";
 import { useTaskDetail } from "../../../../src/hooks/useTasks";
-import { updateTaskStatus, addTaskComment, getTaskComments, updateTaskProof } from "../../../../src/lib/firestore";
-import { pickProofPhoto, uploadProofPhoto } from "../../../../src/lib/storage";
+import { updateTaskStatus, addTaskComment, getTaskComments, updateTaskProof, updateTaskProofDoc, markTaskSeen, createNotification, createTask, getUsersByIds, saveSubtasks } from "../../../../src/lib/firestore";
+import type { TaskComment, Subtask } from "../../../../src/types";
+import { pickProofPhoto, uploadProofPhoto, pickProofDocument, uploadProofDocument } from "../../../../src/lib/storage";
+import { sendTaskSirenPush } from "../../../../src/lib/notifications";
 import { confirmAction, showAlert } from "../../../../src/lib/confirm";
-import { successBuzz } from "../../../../src/lib/haptics";
+import { successBuzz, tapTick } from "../../../../src/lib/haptics";
 import { authenticateToMarkTask } from "../../../../src/lib/biometric";
 import { PriorityBadge } from "../../../../src/components/PriorityBadge";
 import { GlassCard } from "../../../../src/components/GlassCard";
 import { LoadingState } from "../../../../src/components/LoadingState";
 import { ErrorState } from "../../../../src/components/ErrorState";
 import { colors } from "../../../../src/constants/theme";
-import type { TaskComment } from "../../../../src/types";
 
 const categoryLabels: Record<string, string> = {
   academic: "Academic",
@@ -34,14 +36,41 @@ export default function TeacherTaskDetail() {
   const { task, loading, error, refresh } = useTaskDetail(id as string);
   const [comments, setComments] = useState<TaskComment[]>([]);
   const [commentText, setCommentText] = useState("");
+  const [subtasks, setSubtasks] = useState<Subtask[]>([]);
+  const [newSubtask, setNewSubtask] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     if (id) {
       getTaskComments(id as string).then(setComments).catch(() => {});
+      if (appUser?.uid) markTaskSeen(id as string, appUser.uid);
     }
   }, [id]);
+
+  useEffect(() => {
+    if (task?.subtasks) setSubtasks(task.subtasks);
+  }, [task?.id]);
+
+  const persistSubtasks = async (next: Subtask[]) => {
+    setSubtasks(next);
+    try {
+      await saveSubtasks(id as string, next);
+    } catch {
+      showAlert("Error", "Failed to save checklist");
+    }
+  };
+
+  const toggleSubtask = (subId: string) => {
+    tapTick();
+    persistSubtasks(subtasks.map((s) => (s.id === subId ? { ...s, done: !s.done } : s)));
+  };
+
+  const addSubtask = () => {
+    if (!newSubtask.trim()) return;
+    persistSubtasks([...subtasks, { id: `sub-${Date.now()}`, title: newSubtask.trim(), done: false }]);
+    setNewSubtask("");
+  };
 
   const handleAccept = async () => {
     const verified = await authenticateToMarkTask("accept this task");
@@ -63,6 +92,25 @@ export default function TeacherTaskDetail() {
     try {
       await updateTaskStatus(id as string, "completed");
       successBuzz();
+      if (task && (task.recurrence === "daily" || task.recurrence === "weekly")) {
+        const nextDeadline = new Date(deadlineDate);
+        nextDeadline.setDate(nextDeadline.getDate() + (task.recurrence === "daily" ? 1 : 7));
+        createTask({
+          title: task.title,
+          description: task.description,
+          priority: task.priority,
+          category: task.category,
+          deadline: Timestamp.fromDate(nextDeadline),
+          deadlineLabel: "custom",
+          recurrence: task.recurrence,
+          status: "pending",
+          assignment: task.assignment,
+          assignedTo: task.assignedTo,
+          assignedBy: task.assignedBy,
+          assignedByName: task.assignedByName,
+          reminderSent: false,
+        }).catch(() => {});
+      }
       refresh();
     } catch {
       showAlert("Error", "Failed to complete task");
@@ -85,13 +133,49 @@ export default function TeacherTaskDetail() {
     }
   };
 
-  const handleAddComment = async () => {    if (!commentText.trim() || !appUser) return;
+  const handleAddProofDoc = async () => {
+    setUploading(true);
+    try {
+      const picked = await pickProofDocument();
+      if (!picked) return;
+      const url = await uploadProofDocument(id as string, picked);
+      await updateTaskProofDoc(id as string, url, picked.name);
+      successBuzz();
+      refresh();
+    } catch (e) {
+      showAlert("Error", e instanceof Error ? e.message : "Failed to upload document");
+    } finally {
+      setUploading(false);
+    }
+  };
+  const handleAddComment = async () => {
+    if (!commentText.trim() || !appUser) return;
     setSubmitting(true);
     try {
       await addTaskComment(id as string, appUser.uid, appUser.name, commentText.trim());
       setCommentText("");
       const updated = await getTaskComments(id as string);
       setComments(updated);
+      if (task && task.assignedBy && task.assignedBy !== appUser.uid) {
+        const notifId = await createNotification({
+          uid: task.assignedBy,
+          title: `New comment on "${task.title}"`,
+          body: `${appUser.name}: ${commentText.trim().slice(0, 100)}`,
+          type: "task_updated",
+          taskId: id as string,
+          read: false,
+        }).catch(() => null);
+        if (notifId) {
+          getUsersByIds([task.assignedBy])
+            .then((users) => {
+              const tokens = users.filter((u) => u.fcmToken).map((u) => ({ pushToken: u.fcmToken as string, taskId: id as string }));
+              if (tokens.length > 0) {
+                return sendTaskSirenPush(tokens, `New comment on "${task.title}"`, `${appUser.name} commented on the task.`);
+              }
+            })
+            .catch(() => {});
+        }
+      }
     } catch {
       showAlert("Error", "Failed to add comment");
     } finally {
@@ -190,6 +274,58 @@ export default function TeacherTaskDetail() {
                   </Text>
                 )}
               </TouchableOpacity>
+            )}
+            {task.proofDocUrl ? (
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginTop: 8, backgroundColor: "#F8FAFC", borderRadius: 12, padding: 12, borderWidth: 1, borderColor: "#E2E8F0" }}>
+                <Text style={{ fontSize: 20 }}>📄</Text>
+                <Text style={{ flex: 1, fontSize: 13, fontWeight: "600", color: "#334155" }} numberOfLines={1}>
+                  {task.proofDocName ?? "Document"}
+                </Text>
+              </View>
+            ) : null}
+            {task.status !== "completed" && (
+              <TouchableOpacity
+                onPress={handleAddProofDoc}
+                disabled={uploading}
+                style={{ marginTop: 8, backgroundColor: "#FFFFFF", borderWidth: 1, borderColor: "#E2E8F0", borderRadius: 12, padding: 12, alignItems: "center", opacity: uploading ? 0.6 : 1 }}
+              >
+                <Text style={{ color: "#64748B", fontWeight: "700" }}>
+                  {task.proofDocUrl ? "Replace PDF" : "Attach PDF"}
+                </Text>
+              </TouchableOpacity>
+            )}
+          </GlassCard>
+          </Animated.View>
+
+          {/* Checklist */}
+          <Animated.View entering={FadeInUp.duration(400).delay(175)}>
+          <GlassCard style={{ padding: 16, marginBottom: 16 }}>
+            <Text style={{ fontSize: 16, fontWeight: "700", color: "#0F172A", marginBottom: 12 }}>
+              Checklist{subtasks.length > 0 ? ` (${subtasks.filter((s) => s.done).length}/${subtasks.length})` : ""}
+            </Text>
+            {subtasks.map((s) => (
+              <TouchableOpacity key={s.id} onPress={() => toggleSubtask(s.id)} style={{ flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: "#F1F5F9" }}>
+                <View style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: s.done ? "#22C55E" : "#FFFFFF", borderWidth: 2, borderColor: s.done ? "#22C55E" : "#CBD5E1", justifyContent: "center", alignItems: "center" }}>
+                  {s.done && <Text style={{ color: "#FFFFFF", fontSize: 12, fontWeight: "800" }}>✓</Text>}
+                </View>
+                <Text style={{ flex: 1, fontSize: 14, color: s.done ? "#94A3B8" : "#334155", textDecorationLine: s.done ? "line-through" : "none" }}>
+                  {s.title}
+                </Text>
+              </TouchableOpacity>
+            ))}
+            {task.status !== "completed" && (
+              <View style={{ flexDirection: "row", gap: 8, marginTop: 8 }}>
+                <TextInput
+                  value={newSubtask}
+                  onChangeText={setNewSubtask}
+                  placeholder="Add a step..."
+                  placeholderTextColor="#94A3B8"
+                  style={{ flex: 1, backgroundColor: "#F8FAFC", borderRadius: 12, padding: 12, fontSize: 14, borderWidth: 1, borderColor: "#E2E8F0" }}
+                />
+                <TouchableOpacity onPress={addSubtask} disabled={!newSubtask.trim()} style={{ backgroundColor: colors.primary[500], borderRadius: 12, padding: 12, justifyContent: "center", opacity: !newSubtask.trim() ? 0.5 : 1 }}>
+                  <Text style={{ color: "#FFF", fontWeight: "700" }}>Add</Text>
+                </TouchableOpacity>
+              </View>
             )}
           </GlassCard>
           </Animated.View>
