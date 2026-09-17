@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import { useRouter } from "expo-router";
 import { useAuthStore } from "../../../src/store/authStore";
 import { useAdminTasks } from "../../../src/hooks/useTasks";
+import { isOverdue, matchesStatusFilter } from "../../../src/lib/tasks";
 import { TaskCard } from "../../../src/components/TaskCard";
 import { StatCard } from "../../../src/components/StatCard";
 import { GlassCard } from "../../../src/components/GlassCard";
@@ -29,7 +30,7 @@ export default function AdminDashboard() {
   const total = tasks.length;
   const completed = tasks.filter((t) => t.status === "completed").length;
   const pending = tasks.filter((t) => t.status === "pending" || t.status === "accepted").length;
-  const delayed = tasks.filter((t) => t.status === "delayed").length;
+  const delayed = tasks.filter((t) => isOverdue(t)).length;
   const urgent = tasks.filter((t) => t.priority === "urgent" && t.status !== "completed").length;
   const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
 
@@ -60,8 +61,7 @@ export default function AdminDashboard() {
       const hay = `${t.title} ${t.description ?? ""} ${t.category}`.toLowerCase();
       if (!hay.includes(q)) return false;
     }
-    if (statusFilter !== "all" && t.status !== statusFilter) return false;
-    return true;
+    return matchesStatusFilter(t, statusFilter);
   });
 
   if (loading && !refreshing) return <LoadingState message="Loading admin dashboard..." />;
@@ -155,7 +155,12 @@ export default function AdminDashboard() {
 
       {/* Recent Tasks */}
       <Animated.View entering={FadeInUp.duration(500).delay(250)} style={{ paddingHorizontal: 16 }}>
-        <Text style={{ fontSize: 18, fontWeight: "700", color: "#0F172A", marginBottom: 12 }}>Recent Tasks</Text>
+        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+          <Text style={{ fontSize: 18, fontWeight: "700", color: "#0F172A" }}>Recent Tasks</Text>
+          <TouchableOpacity onPress={onRefresh} style={{ paddingHorizontal: 10, paddingVertical: 4 }}>
+            <Text style={{ fontSize: 13, fontWeight: "700", color: colors.primary[500] }}>⟳ Refresh</Text>
+          </TouchableOpacity>
+        </View>
         <TextInput
           value={search}
           onChangeText={setSearch}

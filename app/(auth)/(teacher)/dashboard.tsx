@@ -148,9 +148,14 @@ export default function TeacherDashboard() {
 
       {/* Recent Tasks */}
       <Animated.View entering={FadeInUp.duration(500).delay(300)} style={{ paddingHorizontal: 16, marginTop: 8 }}>
-        <Text style={{ fontSize: 18, fontWeight: "700", color: "#0F172A", marginBottom: 12 }}>
-          Recent Tasks
-        </Text>
+        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+          <Text style={{ fontSize: 18, fontWeight: "700", color: "#0F172A" }}>
+            Recent Tasks
+          </Text>
+          <TouchableOpacity onPress={onRefresh} style={{ paddingHorizontal: 10, paddingVertical: 4 }}>
+            <Text style={{ fontSize: 13, fontWeight: "700", color: colors.primary[500] }}>⟳ Refresh</Text>
+          </TouchableOpacity>
+        </View>
         <TextInput
           value={search}
           onChangeText={setSearch}

@@ -140,7 +140,6 @@ export default function CreateTaskScreen() {
         assignedTo: computeAssignedTo(),
         assignedBy: appUser?.uid ?? "",
         assignedByName: appUser?.name ?? "Admin",
-        reminderSent: false,
       };
       const newTaskId = await createTask(taskData);
       const assignedIds = computeAssignedTo();

@@ -69,7 +69,6 @@ export interface Task {
   seenBy?: string[];
   subtasks?: Subtask[];
   recurrence?: TaskRecurrence;
-  reminderSent?: boolean;
 }
 
 export interface TaskComment {

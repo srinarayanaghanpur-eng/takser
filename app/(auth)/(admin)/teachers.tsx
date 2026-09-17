@@ -68,6 +68,9 @@ export default function AdminTeachers() {
               {teachers.length} registered teachers
             </Text>
           </View>
+          <TouchableOpacity onPress={onRefresh} style={{ backgroundColor: "rgba(255,255,255,0.15)", borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10 }}>
+            <Text style={{ fontSize: 16, fontWeight: "800", color: "#FFFFFF" }}>⟳</Text>
+          </TouchableOpacity>
           <TouchableOpacity
             onPress={() => router.push("/(auth)/(admin)/add-teacher")}
             style={{ backgroundColor: "#FFFFFF", borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10, flexDirection: "row", alignItems: "center", gap: 4 }}

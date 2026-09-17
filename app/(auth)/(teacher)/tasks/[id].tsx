@@ -1,6 +1,6 @@
 import { View, Text, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, KeyboardAvoidingView, Platform, Image } from "react-native";
 import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useLocalSearchParams, useRouter, Stack } from "expo-router";
 import { format } from "date-fns";
 import { Timestamp } from "firebase/firestore";
@@ -72,12 +72,37 @@ export default function TeacherTaskDetail() {
     setNewSubtask("");
   };
 
+  const notifyAdmin = useCallback(
+    async (verb: string) => {
+      if (!task || !appUser || !task.assignedBy || task.assignedBy === appUser.uid) return;
+      try {
+        await createNotification({
+          uid: task.assignedBy,
+          title: `Task ${verb}: "${task.title}"`,
+          body: `${appUser.name} ${verb} the task.`,
+          type: "task_updated",
+          taskId: id as string,
+          read: false,
+        });
+        const users = await getUsersByIds([task.assignedBy]).catch(() => []);
+        const tokens = users
+          .filter((u) => u.fcmToken)
+          .map((u) => ({ pushToken: u.fcmToken as string, taskId: id as string }));
+        if (tokens.length > 0) {
+          await sendTaskSirenPush(tokens, `Task ${verb}`, `${appUser.name} ${verb} "${task.title}".`).catch(() => {});
+        }
+      } catch {}
+    },
+    [task, appUser, id]
+  );
+
   const handleAccept = async () => {
     const verified = await authenticateToMarkTask("accept this task");
     if (!verified) return;
     try {
       await updateTaskStatus(id as string, "accepted");
       successBuzz();
+      notifyAdmin("accepted");
       refresh();
     } catch (e) {
       showAlert("Error", "Failed to accept task");
@@ -92,6 +117,7 @@ export default function TeacherTaskDetail() {
     try {
       await updateTaskStatus(id as string, "completed");
       successBuzz();
+      notifyAdmin("completed");
       if (task && (task.recurrence === "daily" || task.recurrence === "weekly")) {
         const nextDeadline = new Date(deadlineDate);
         nextDeadline.setDate(nextDeadline.getDate() + (task.recurrence === "daily" ? 1 : 7));
@@ -108,7 +134,6 @@ export default function TeacherTaskDetail() {
           assignedTo: task.assignedTo,
           assignedBy: task.assignedBy,
           assignedByName: task.assignedByName,
-          reminderSent: false,
         }).catch(() => {});
       }
       refresh();

@@ -4,7 +4,8 @@ import { useState, useEffect, useCallback } from "react";
 import { useLocalSearchParams, useRouter, Stack } from "expo-router";
 import { Timestamp } from "firebase/firestore";
 import { useTaskDetail } from "../../../src/hooks/useTasks";
-import { updateTaskDoc, deleteTaskDoc, getAllTeachers } from "../../../src/lib/firestore";
+import { updateTaskDoc, deleteTaskDoc, getAllTeachers, createNotification, getUsersByIds } from "../../../src/lib/firestore";
+import { sendTaskSirenPush } from "../../../src/lib/notifications";
 import { confirmAction, showAlert } from "../../../src/lib/confirm";
 import { successBuzz, tapTick } from "../../../src/lib/haptics";
 import { GlassCard } from "../../../src/components/GlassCard";
@@ -118,6 +119,27 @@ export default function EditTaskScreen() {
         assignedTo,
       });
       successBuzz();
+      try {
+        await Promise.all(
+          assignedTo.map((uid) =>
+            createNotification({
+              uid,
+              title: `Task updated: "${title.trim()}"`,
+              body: "Your admin modified this task. Please review the changes.",
+              type: "task_updated",
+              taskId: id as string,
+              read: false,
+            }).catch(() => {})
+          )
+        );
+        const assignees = await getUsersByIds(assignedTo).catch(() => []);
+        const tokens = assignees
+          .filter((u) => u.fcmToken)
+          .map((u) => ({ pushToken: u.fcmToken as string, taskId: id as string }));
+        if (tokens.length > 0) {
+          await sendTaskSirenPush(tokens, "Task updated", `"${title.trim()}" was modified.`).catch(() => {});
+        }
+      } catch {}
       showAlert("Saved", "Task updated successfully");
       router.back();
     } catch (e) {
