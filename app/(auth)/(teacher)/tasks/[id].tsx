@@ -6,9 +6,9 @@ import { format } from "date-fns";
 import { Timestamp } from "firebase/firestore";
 import { useAuthStore } from "../../../../src/store/authStore";
 import { useTaskDetail } from "../../../../src/hooks/useTasks";
-import { updateTaskStatus, addTaskComment, getTaskComments, updateTaskProof, updateTaskProofDoc, markTaskSeen, createNotification, createTask, getUsersByIds, saveSubtasks } from "../../../../src/lib/firestore";
+import { updateTaskStatus, addTaskComment, getTaskComments, updateTaskProofData, markTaskSeen, createNotification, createTask, getUsersByIds, saveSubtasks } from "../../../../src/lib/firestore";
 import type { TaskComment, Subtask } from "../../../../src/types";
-import { pickProofPhoto, uploadProofPhoto, pickProofDocument, uploadProofDocument } from "../../../../src/lib/storage";
+import { pickProofPhotoBase64 } from "../../../../src/lib/storage";
 import { sendTaskSirenPush } from "../../../../src/lib/notifications";
 import { confirmAction, showAlert } from "../../../../src/lib/confirm";
 import { successBuzz, tapTick } from "../../../../src/lib/haptics";
@@ -120,30 +120,14 @@ export default function TeacherTaskDetail() {
   const handleAddProof = async () => {
     setUploading(true);
     try {
-      const photo = await pickProofPhoto();
-      if (!photo) return;
-      const url = await uploadProofPhoto(id as string, photo);
-      await updateTaskProof(id as string, url);
+      const dataUri = await pickProofPhotoBase64();
+      if (!dataUri) return;
+      await updateTaskProofData(id as string, dataUri);
       successBuzz();
+      showAlert("Sent", "Photo sent for admin review. It will be removed after download.");
       refresh();
     } catch (e) {
-      showAlert("Error", e instanceof Error ? e.message : "Failed to upload photo");
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const handleAddProofDoc = async () => {
-    setUploading(true);
-    try {
-      const picked = await pickProofDocument();
-      if (!picked) return;
-      const url = await uploadProofDocument(id as string, picked);
-      await updateTaskProofDoc(id as string, url, picked.name);
-      successBuzz();
-      refresh();
-    } catch (e) {
-      showAlert("Error", e instanceof Error ? e.message : "Failed to upload document");
+      showAlert("Error", e instanceof Error ? e.message : "Failed to attach photo");
     } finally {
       setUploading(false);
     }
@@ -249,12 +233,19 @@ export default function TeacherTaskDetail() {
           <Animated.View entering={FadeInUp.duration(400).delay(150)}>
           <GlassCard style={{ padding: 16, marginBottom: 16 }}>
             <Text style={{ fontSize: 16, fontWeight: "700", color: "#0F172A", marginBottom: 12 }}>Proof of Work</Text>
-            {task.proofImageUrl ? (
-              <Image
-                source={{ uri: task.proofImageUrl }}
-                style={{ width: "100%", height: 200, borderRadius: 12, marginBottom: 12, backgroundColor: "#F1F5F9" }}
-                resizeMode="cover"
-              />
+            {task.proofImageData || task.proofImageUrl ? (
+              <>
+                <Image
+                  source={{ uri: task.proofImageData ?? task.proofImageUrl }}
+                  style={{ width: "100%", height: 200, borderRadius: 12, marginBottom: 8, backgroundColor: "#F1F5F9" }}
+                  resizeMode="cover"
+                />
+                {task.proofImageData ? (
+                  <Text style={{ fontSize: 12, color: "#94A3B8", textAlign: "center", marginBottom: 8 }}>
+                    With admin for review — removed automatically after download
+                  </Text>
+                ) : null}
+              </>
             ) : (
               <Text style={{ fontSize: 14, color: "#94A3B8", textAlign: "center", paddingVertical: 12 }}>
                 No proof attached yet
@@ -270,28 +261,9 @@ export default function TeacherTaskDetail() {
                   <ActivityIndicator color="#1A3A6B" />
                 ) : (
                   <Text style={{ color: "#1A3A6B", fontWeight: "700" }}>
-                    {task.proofImageUrl ? "Replace Photo" : "Add Proof Photo"}
+                    {task.proofImageData || task.proofImageUrl ? "Replace Photo" : "Add Proof Photo"}
                   </Text>
                 )}
-              </TouchableOpacity>
-            )}
-            {task.proofDocUrl ? (
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginTop: 8, backgroundColor: "#F8FAFC", borderRadius: 12, padding: 12, borderWidth: 1, borderColor: "#E2E8F0" }}>
-                <Text style={{ fontSize: 20 }}>📄</Text>
-                <Text style={{ flex: 1, fontSize: 13, fontWeight: "600", color: "#334155" }} numberOfLines={1}>
-                  {task.proofDocName ?? "Document"}
-                </Text>
-              </View>
-            ) : null}
-            {task.status !== "completed" && (
-              <TouchableOpacity
-                onPress={handleAddProofDoc}
-                disabled={uploading}
-                style={{ marginTop: 8, backgroundColor: "#FFFFFF", borderWidth: 1, borderColor: "#E2E8F0", borderRadius: 12, padding: 12, alignItems: "center", opacity: uploading ? 0.6 : 1 }}
-              >
-                <Text style={{ color: "#64748B", fontWeight: "700" }}>
-                  {task.proofDocUrl ? "Replace PDF" : "Attach PDF"}
-                </Text>
               </TouchableOpacity>
             )}
           </GlassCard>

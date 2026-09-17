@@ -2,8 +2,12 @@ import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Image } fr
 import { useState, useEffect } from "react";
 import { useLocalSearchParams, useRouter, Stack } from "expo-router";
 import { format } from "date-fns";
+import * as FileSystem from "expo-file-system/legacy";
+import * as Sharing from "expo-sharing";
 import { useTaskDetail } from "../../../../src/hooks/useTasks";
-import { getTaskComments, getUsersByIds } from "../../../../src/lib/firestore";
+import { getTaskComments, getUsersByIds, wipeTaskProof } from "../../../../src/lib/firestore";
+import { confirmAction, showAlert } from "../../../../src/lib/confirm";
+import { successBuzz } from "../../../../src/lib/haptics";
 import { PriorityBadge } from "../../../../src/components/PriorityBadge";
 import { GlassCard } from "../../../../src/components/GlassCard";
 import { LoadingState } from "../../../../src/components/LoadingState";
@@ -22,10 +26,39 @@ export default function AdminTaskDetail() {
   const { task, loading, error, refresh } = useTaskDetail(id as string);
   const [comments, setComments] = useState<TaskComment[]>([]);
   const [seenNames, setSeenNames] = useState<string>("");
+  const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
     if (id) getTaskComments(id as string).then(setComments).catch(() => {});
   }, [id]);
+
+  const handleDownloadAndWipe = async () => {
+    if (!task?.proofImageData) return;
+    const ok = await confirmAction(
+      "Download Proof",
+      "Save this photo to your device? It will be permanently wiped from the task right after.",
+      "Download"
+    );
+    if (!ok) return;
+    setDownloading(true);
+    try {
+      const raw = task.proofImageData;
+      const base64 = raw.includes(",") ? raw.split(",")[1] : raw;
+      const fileUri = `${FileSystem.cacheDirectory}proof-${id}.jpg`;
+      await FileSystem.writeAsStringAsync(fileUri, base64, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+      await Sharing.shareAsync(fileUri, { dialogTitle: "Save proof photo" }).catch(() => {});
+      await wipeTaskProof(id as string);
+      successBuzz();
+      showAlert("Wiped", "Photo saved and removed from the task.");
+      refresh();
+    } catch (e) {
+      showAlert("Error", e instanceof Error ? e.message : "Download failed");
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   useEffect(() => {
     const seen = task?.seenBy ?? [];
@@ -96,14 +129,27 @@ export default function AdminTaskDetail() {
           >
             <Text style={{ color: "#1A3A6B", fontWeight: "800", fontSize: 14 }}>✏️ Edit Task</Text>
           </TouchableOpacity>
-          {task.proofImageUrl ? (
+          {task.proofImageData || task.proofImageUrl ? (
             <View style={{ marginTop: 16 }}>
               <Text style={{ fontSize: 12, fontWeight: "700", color: "#94A3B8", marginBottom: 8 }}>PROOF OF WORK</Text>
               <Image
-                source={{ uri: task.proofImageUrl }}
+                source={{ uri: task.proofImageData ?? task.proofImageUrl }}
                 style={{ width: "100%", height: 200, borderRadius: 12, backgroundColor: "#F1F5F9" }}
                 resizeMode="cover"
               />
+              {task.proofImageData ? (
+                <TouchableOpacity
+                  onPress={handleDownloadAndWipe}
+                  disabled={downloading}
+                  style={{ marginTop: 8, backgroundColor: colors.primary[500], borderRadius: 12, padding: 12, alignItems: "center", opacity: downloading ? 0.6 : 1 }}
+                >
+                  {downloading ? (
+                    <ActivityIndicator color="#FFFFFF" />
+                  ) : (
+                    <Text style={{ color: "#FFFFFF", fontWeight: "800", fontSize: 14 }}>⬇ Download & Wipe</Text>
+                  )}
+                </TouchableOpacity>
+              ) : null}
             </View>
           ) : null}
           {task.proofDocUrl ? (

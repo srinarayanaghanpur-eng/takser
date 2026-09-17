@@ -1,5 +1,6 @@
 import * as ImagePicker from "expo-image-picker";
 import * as DocumentPicker from "expo-document-picker";
+import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { storage } from "./firebase";
 
@@ -78,4 +79,29 @@ export async function uploadAvatar(uid: string, photo: PickedPhoto): Promise<str
   const storageRef = ref(storage, `avatars/${uid}/photo.jpg`);
   await uploadBytes(storageRef, blob, { contentType: photo.mimeType });
   return getDownloadURL(storageRef);
+}
+
+export async function pickProofPhotoBase64(): Promise<string | null> {
+  const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  if (status !== "granted") {
+    throw new Error("Photo permission is required to attach proof");
+  }
+  const result = await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: ImagePicker.MediaTypeOptions.Images,
+    allowsEditing: true,
+    quality: 0.8,
+  });
+  if (result.canceled || result.assets.length === 0) return null;
+  const manipulated = await ImageManipulator.manipulate(
+    result.assets[0].uri
+  )
+    .resize({ width: 800 })
+    .renderAsync();
+  const saved = await manipulated.saveAsync({
+    compress: 0.5,
+    format: SaveFormat.JPEG,
+    base64: true,
+  });
+  if (!saved.base64) throw new Error("Could not process photo");
+  return `data:image/jpeg;base64,${saved.base64}`;
 }

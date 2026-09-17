@@ -13,6 +13,7 @@ import {
   documentId,
   arrayUnion,
   deleteDoc,
+  deleteField,
   type Timestamp as FirestoreTimestamp,
 } from "firebase/firestore";
 import { db } from "./firebase";
@@ -178,6 +179,23 @@ export async function updateUserPushToken(uid: string, pushToken: string): Promi
 
 export async function updateTaskProof(taskId: string, proofImageUrl: string): Promise<void> {
   await updateDoc(doc(db, FIRESTORE_COLLECTIONS.TASKS, taskId), { proofImageUrl });
+}
+
+export async function updateTaskProofData(taskId: string, proofImageData: string): Promise<void> {
+  await updateDoc(doc(db, FIRESTORE_COLLECTIONS.TASKS, taskId), {
+    proofImageData,
+    proofImageAt: serverTimestamp(),
+  });
+}
+
+export async function wipeTaskProof(taskId: string): Promise<void> {
+  await updateDoc(doc(db, FIRESTORE_COLLECTIONS.TASKS, taskId), {
+    proofImageData: deleteField(),
+    proofImageAt: deleteField(),
+    proofImageUrl: deleteField(),
+    proofDocUrl: deleteField(),
+    proofDocName: deleteField(),
+  });
 }
 
 export async function updateTaskProofDoc(

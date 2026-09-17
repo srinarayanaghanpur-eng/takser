@@ -64,6 +64,8 @@ export interface Task {
   proofImageUrl?: string;
   proofDocUrl?: string;
   proofDocName?: string;
+  proofImageData?: string;
+  proofImageAt?: Timestamp;
   seenBy?: string[];
   subtasks?: Subtask[];
   recurrence?: TaskRecurrence;
